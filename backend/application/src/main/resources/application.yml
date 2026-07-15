@@ -1,0 +1,3 @@
+server: { port: 8080 }
+modules: { behavior-trace: { enabled: true } }
+logging: { level: { com.example.metadataui: INFO } }

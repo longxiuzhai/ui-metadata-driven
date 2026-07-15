@@ -1,0 +1,61 @@
+<script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
+import { loadCardData } from '../api'
+import { cardRegistry } from '../cardRegistry'
+import type { CardAction, CardDefinition } from '../types'
+import UnknownCard from './cards/UnknownCard.vue'
+
+const props = defineProps<{ definition: CardDefinition; customerId: string }>()
+const root = useTemplateRef<HTMLElement>('root')
+const data = ref<unknown>(null)
+const loading = ref(false)
+const error = ref('')
+let controller: AbortController | undefined
+let observer: IntersectionObserver | undefined
+const resolvedComponent = computed(() => cardRegistry[props.definition.component] ?? UnknownCard)
+const isUnknown = computed(() => !cardRegistry[props.definition.component])
+const isEmpty = computed(() => data.value == null || (Array.isArray(data.value) && data.value.length === 0))
+
+async function load() {
+  if (loading.value) return
+  controller?.abort(); controller = new AbortController()
+  loading.value = true; error.value = ''
+  const started = performance.now()
+  try { data.value = await loadCardData(props.definition.dataApi, props.customerId, controller.signal) }
+  catch (e) { if ((e as Error).name !== 'AbortError') error.value = (e as Error).message }
+  finally {
+    loading.value = false
+    console.info('card_load', { card: props.definition.code, durationMs: Math.round(performance.now() - started), ok: !error.value })
+  }
+}
+
+function handleAction(action: CardAction) {
+  if (action.type === 'refresh') return load()
+  if (action.type === 'navigate' && action.target) window.location.assign(action.target)
+  if (action.type === 'open-form') window.alert(`打开已登记表单：${action.target}`)
+}
+
+onMounted(() => {
+  if (props.definition.loadStrategy === 'eager') return load()
+  observer = new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting)) { observer?.disconnect(); load() }
+  }, { rootMargin: '120px' })
+  if (root.value) observer.observe(root.value)
+})
+onBeforeUnmount(() => { observer?.disconnect(); controller?.abort() })
+</script>
+
+<template><article ref="root" class="card">
+  <header><h2>{{ definition.title }}</h2><div><button v-for="action in definition.actions" :key="action.code" @click="handleAction(action)">{{action.label}}</button></div></header>
+  <div v-if="error" class="state error"><span>{{error}}</span><button @click="load">重试</button></div>
+  <div v-else-if="loading" class="skeleton"><i/><i/><i/></div>
+  <div v-else-if="data === null" class="state">等待进入视口…</div>
+  <div v-else-if="isEmpty" class="state">暂无数据</div>
+  <component v-else :is="resolvedComponent" :data="data" v-bind="definition.props" :component-name="isUnknown ? definition.component : undefined" />
+</article></template>
+
+<style scoped>
+.card{background:#fff;border:1px solid #e6ebf2;border-radius:14px;padding:22px;min-height:150px;box-shadow:0 7px 22px rgba(25,43,70,.055)}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}h2{font-size:17px;margin:0;color:#172033}button{border:0;border-radius:7px;padding:7px 11px;color:#2457c5;background:#edf3ff;cursor:pointer}.state{display:flex;min-height:80px;align-items:center;justify-content:center;color:#8792a5;font-size:14px;gap:12px}.error{color:#b42318}.skeleton{display:grid;gap:12px}.skeleton i{height:16px;border-radius:6px;background:linear-gradient(90deg,#edf1f6,#f8fafc,#edf1f6);background-size:200%;animation:shine 1.3s infinite}.skeleton i:nth-child(2){width:70%}.skeleton i:nth-child(3){width:85%}@keyframes shine{to{background-position:-200%}}
+</style>
+

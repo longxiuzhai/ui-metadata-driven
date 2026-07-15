@@ -1,0 +1,5 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"><modelVersion>4.0.0</modelVersion>
+  <parent><groupId>com.example.metadataui</groupId><artifactId>metadata-ui-parent</artifactId><version>0.0.1-SNAPSHOT</version><relativePath>../../pom.xml</relativePath></parent>
+  <artifactId>behavior-trace-plugin</artifactId>
+  <dependencies><dependency><groupId>com.example.metadataui</groupId><artifactId>customer-detail-contract</artifactId><version>${project.version}</version></dependency><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-autoconfigure</artifactId></dependency><dependency><groupId>org.springframework</groupId><artifactId>spring-webmvc</artifactId></dependency></dependencies>
+</project>

@@ -1,0 +1,5 @@
+package com.example.metadataui.plugin.behaviortrace;
+import com.example.metadataui.card.condition.CardConditional; import com.example.metadataui.card.model.*; import com.example.metadataui.customer.detail.spi.*; import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty; import org.springframework.stereotype.Component; import java.util.*;
+@Component @ConditionalOnProperty(name="modules.behavior-trace.enabled",havingValue="true",matchIfMissing=true) @CardConditional(feature="customerBehaviorTrace",permissions="customer:trace:read") public class BehaviorTraceCardProvider implements CustomerDetailCardProvider {
+ public String cardCode(){return "behavior_trace";} public CardDefinition definition(CustomerDetailContext c){return new CardDefinition(cardCode(),"行为轨迹","TimelineCard",40,new ResponsiveSpan(24,24,12),"/api/customers/{customerId}/traces","on-visible","customer:trace:read",Map.of("timeField","timestamp","titleField","eventName","descriptionField","description"),List.of());}
+}
