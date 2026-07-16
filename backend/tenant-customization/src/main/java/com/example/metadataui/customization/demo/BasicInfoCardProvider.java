@@ -40,6 +40,7 @@ public class BasicInfoCardProvider implements CardProvider {
                 new ResponsiveSpan(24, 24, 12), "/api/customers/{customerId}/basic", "eager", "customer:read",
                 Map.of("columns", 2, "fields", List.of(
                         Map.of("key", "name", "label", "姓名"),
+                        Map.of("key", "unionId", "label", "UnionID"),
                         Map.of("key", "mobile", "label", "手机号", "formatter", "mobile-mask"),
                         Map.of("key", "status", "label", "状态", "formatter", "customer-status"))),
                 List.of(

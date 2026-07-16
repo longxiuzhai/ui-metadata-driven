@@ -1,10 +1,22 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { apiRequest } from '../api'
 import type { AdminMenu, AdminPermission, AdminRole, AdminUser } from '../types'
 
 type Tab = 'users' | 'roles' | 'permissions' | 'menus'
-const tab = ref<Tab>('users')
+const route = useRoute()
+const validTabs: Tab[] = ['users', 'roles', 'permissions', 'menus']
+const tab = computed<Tab>(() => {
+  const section = String(route.query.section ?? 'users') as Tab
+  return validTabs.includes(section) ? section : 'users'
+})
+const sectionMeta = computed(() => ({
+  users: { title: '用户管理', description: '配置账号状态及所属角色。' },
+  roles: { title: '角色管理', description: '维护角色，并关联权限与可见菜单。' },
+  permissions: { title: '权限配置', description: '定义后端资源与操作权限编码。' },
+  menus: { title: '菜单配置', description: '维护菜单入口、排序及访问权限。' }
+})[tab.value])
 const loading = ref(true)
 const error = ref('')
 const notice = ref('')
@@ -105,15 +117,10 @@ onMounted(loadAll)
 
 <template>
   <section class="security-admin">
-    <header class="admin-head">
-      <div><span class="eyebrow">RBAC CONTROL CENTER</span><h1>账号与权限管理</h1>
-        <p>用户、角色、权限和菜单均持久化在 MySQL 中。</p></div>
+    <header class="admin-toolbar">
+      <div><h1>{{ sectionMeta.title }}</h1><p>{{ sectionMeta.description }}</p></div>
       <button class="secondary" @click="loadAll">刷新数据</button>
     </header>
-    <div class="tabs">
-      <button v-for="item in ([['users','用户'],['roles','角色'],['permissions','权限'],['menus','菜单']] as const)"
-              :key="item[0]" :class="{ active: tab === item[0] }" @click="tab = item[0]">{{ item[1] }}</button>
-    </div>
     <div v-if="error" class="message error">{{ error }}</div>
     <div v-if="notice" class="message ok">{{ notice }}</div>
     <div v-if="loading" class="loading">正在加载权限配置…</div>
@@ -189,11 +196,9 @@ onMounted(loadAll)
 
 <style scoped>
 .security-admin { max-width: 1160px; margin: 0 auto; }
-.admin-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; padding: 24px 26px; border: 1px solid #dde6f1; border-radius: 18px; background: linear-gradient(120deg,#fff 62%,#eef5ff); box-shadow: 0 10px 30px #1e3a5f0b; }
-.admin-head h1 { margin: 8px 0 4px; font-size: 32px; }.admin-head p { margin: 0; color: #64748b; }
-.eyebrow { color: #2563eb; font-size: 11px; font-weight: 800; letter-spacing: .14em; }
-.tabs { display: flex; gap: 8px; margin-bottom: 18px; }.tabs button { background: #e8eef8; color: #475569; }
-.tabs button.active { background: #2563eb; color: white; }.panel,.split { border: 1px solid #e2e8f0; border-radius: 15px; background: white; overflow: hidden; }
+.admin-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 14px; }
+.admin-toolbar h1 { margin: 0 0 4px; color: #24324a; font-size: 20px; }.admin-toolbar p { margin: 0; color: #8491a5; font-size: 12px; }
+.panel,.split { border: 1px solid #e2e8f0; border-radius: 15px; background: white; overflow: hidden; }
 .split { display: grid; grid-template-columns: 240px 1fr; min-height: 560px; }.list { padding: 12px; background: #f8fafc; border-right: 1px solid #e2e8f0; }
 .list button { width: 100%; display: grid; gap: 3px; margin-bottom: 5px; padding: 11px; background: transparent; color: #334155; text-align: left; }
 .list button.selected { background: #dbeafe; color: #1d4ed8; }.list .new { margin-bottom: 12px; color: #2563eb; }
@@ -205,8 +210,8 @@ button { padding: 8px 12px; border: 0; border-radius: 8px; background: #2563eb; 
 .actions { display: flex; gap: 9px; }.danger { background: #fee2e2; color: #b42318; }.message,.loading { margin: 12px 0; padding: 12px; border-radius: 8px; }.error { background: #fee2e2; color: #b42318; }.ok { background: #dcfce7; color: #15803d; }
 table { width: 100%; border-collapse: collapse; } th,td { padding: 14px; border-bottom: 1px solid #e2e8f0; text-align: left; } th { background: #f8fafc; color: #64748b; font-size: 12px; }
 @media (max-width: 760px) {
-  .admin-head { align-items: flex-start; gap: 15px; padding: 20px; }
-  .admin-head h1 { font-size: 26px; }
+  .admin-toolbar { align-items: flex-start; }
+  .admin-toolbar h1 { font-size: 18px; }
   .split { grid-template-columns: 1fr; }
   .list { border-right: 0; border-bottom: 1px solid #e2e8f0; }
   .form-row { grid-template-columns: 1fr; }

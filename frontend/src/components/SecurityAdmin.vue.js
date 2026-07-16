@@ -1,6 +1,18 @@
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import { apiRequest } from '../api';
-const tab = ref('users');
+const route = useRoute();
+const validTabs = ['users', 'roles', 'permissions', 'menus'];
+const tab = computed(() => {
+    const section = String(route.query.section ?? 'users');
+    return validTabs.includes(section) ? section : 'users';
+});
+const sectionMeta = computed(() => ({
+    users: { title: '用户管理', description: '配置账号状态及所属角色。' },
+    roles: { title: '角色管理', description: '维护角色，并关联权限与可见菜单。' },
+    permissions: { title: '权限配置', description: '定义后端资源与操作权限编码。' },
+    menus: { title: '菜单配置', description: '维护菜单入口、排序及访问权限。' }
+})[tab.value]);
 const loading = ref(true);
 const error = ref('');
 const notice = ref('');
@@ -124,10 +136,8 @@ debugger; /* PartiallyEnd: #3632/scriptSetup.vue */
 const __VLS_ctx = {};
 let __VLS_components;
 let __VLS_directives;
-/** @type {__VLS_StyleScopedClasses['admin-head']} */ ;
-/** @type {__VLS_StyleScopedClasses['admin-head']} */ ;
-/** @type {__VLS_StyleScopedClasses['tabs']} */ ;
-/** @type {__VLS_StyleScopedClasses['tabs']} */ ;
+/** @type {__VLS_StyleScopedClasses['admin-toolbar']} */ ;
+/** @type {__VLS_StyleScopedClasses['admin-toolbar']} */ ;
 /** @type {__VLS_StyleScopedClasses['split']} */ ;
 /** @type {__VLS_StyleScopedClasses['list']} */ ;
 /** @type {__VLS_StyleScopedClasses['list']} */ ;
@@ -136,8 +146,8 @@ let __VLS_directives;
 /** @type {__VLS_StyleScopedClasses['switch']} */ ;
 /** @type {__VLS_StyleScopedClasses['check']} */ ;
 /** @type {__VLS_StyleScopedClasses['check']} */ ;
-/** @type {__VLS_StyleScopedClasses['admin-head']} */ ;
-/** @type {__VLS_StyleScopedClasses['admin-head']} */ ;
+/** @type {__VLS_StyleScopedClasses['admin-toolbar']} */ ;
+/** @type {__VLS_StyleScopedClasses['admin-toolbar']} */ ;
 /** @type {__VLS_StyleScopedClasses['split']} */ ;
 /** @type {__VLS_StyleScopedClasses['list']} */ ;
 /** @type {__VLS_StyleScopedClasses['form-row']} */ ;
@@ -152,31 +162,17 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.section, __VLS_intrinsicElemen
     ...{ class: "security-admin" },
 });
 __VLS_asFunctionalElement(__VLS_intrinsicElements.header, __VLS_intrinsicElements.header)({
-    ...{ class: "admin-head" },
+    ...{ class: "admin-toolbar" },
 });
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
-__VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
-    ...{ class: "eyebrow" },
-});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.h1, __VLS_intrinsicElements.h1)({});
+(__VLS_ctx.sectionMeta.title);
 __VLS_asFunctionalElement(__VLS_intrinsicElements.p, __VLS_intrinsicElements.p)({});
+(__VLS_ctx.sectionMeta.description);
 __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
     ...{ onClick: (__VLS_ctx.loadAll) },
     ...{ class: "secondary" },
 });
-__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ class: "tabs" },
-});
-for (const [item] of __VLS_getVForSourceType([['users', '用户'], ['roles', '角色'], ['permissions', '权限'], ['menus', '菜单']])) {
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
-        ...{ onClick: (...[$event]) => {
-                __VLS_ctx.tab = item[0];
-            } },
-        key: (item[0]),
-        ...{ class: ({ active: __VLS_ctx.tab === item[0] }) },
-    });
-    (item[1]);
-}
 if (__VLS_ctx.error) {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
         ...{ class: "message error" },
@@ -597,11 +593,8 @@ else {
     }
 }
 /** @type {__VLS_StyleScopedClasses['security-admin']} */ ;
-/** @type {__VLS_StyleScopedClasses['admin-head']} */ ;
-/** @type {__VLS_StyleScopedClasses['eyebrow']} */ ;
+/** @type {__VLS_StyleScopedClasses['admin-toolbar']} */ ;
 /** @type {__VLS_StyleScopedClasses['secondary']} */ ;
-/** @type {__VLS_StyleScopedClasses['tabs']} */ ;
-/** @type {__VLS_StyleScopedClasses['active']} */ ;
 /** @type {__VLS_StyleScopedClasses['message']} */ ;
 /** @type {__VLS_StyleScopedClasses['error']} */ ;
 /** @type {__VLS_StyleScopedClasses['message']} */ ;
@@ -646,6 +639,7 @@ const __VLS_self = (await import('vue')).defineComponent({
     setup() {
         return {
             tab: tab,
+            sectionMeta: sectionMeta,
             loading: loading,
             error: error,
             notice: notice,

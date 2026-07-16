@@ -115,10 +115,28 @@ curl 'http://localhost:8080/api/ui/pages/customer_detail/cards?customerId=1001' 
 | `GET /api/customers/{id}/basic` | 客户基本信息 |
 | `GET /api/customers/{id}/tags` | 客户标签 |
 | `GET /api/customers/{id}/traces` | 客户行为轨迹 |
+| `GET /api/customers/{id}/orders` | 指定客户的订单列表，包含会员 ID |
+| `GET /api/orders?customerId={id}&status={status}` | 按客户与可选状态查询订单 |
+| `GET /api/orders/{orderNo}` | 订单详情 |
+| `GET /api/members/{memberId}` | 会员详情，包含会员 ID、UnionID、手机号 |
 | `GET /api/home/{userId}/work-summary` | 首页工作摘要 |
 | `GET /api/home/{userId}/activities` | 首页最近动态 |
 
-前端只接受以 `/api/` 开头的数据地址，并使用页面上下文替换 `{customerId}`、`{userId}` 等占位符。未替换的占位符会导致卡片加载失败。
+客户域接口由 MyBatis-Plus 查询 `V2__create_customer_domain_schema.sql` 创建的业务表。前端只接受以 `/api/` 开头的数据地址，并使用页面上下文替换 `{customerId}`、`{userId}` 等占位符。未替换的占位符会导致卡片加载失败。
+
+客户基本信息示例：
+
+```json
+{
+  "customerId": "1001",
+  "name": "示例客户 1001",
+  "unionId": "o_demo_union_1001",
+  "mobile": "13800138000",
+  "status": "ACTIVE"
+}
+```
+
+订单中的 `memberId` 可继续请求 `/api/members/{memberId}` 获取会员身份信息。业务数据不存在时返回 `404`。
 
 ## 5. 准备动作
 
@@ -145,7 +163,9 @@ Content-Type: application/json
 {
   "formCode": "customer_basic_edit",
   "initialValues": {
-    "name": "示例客户",
+    "customerId": "1001",
+    "name": "示例客户 1001",
+    "unionId": "o_demo_union_1001",
     "mobile": "13800138000",
     "status": "ACTIVE"
   },
@@ -197,4 +217,4 @@ Content-Type: application/json
 | `404` | 未注册的 `actionCode` |
 | `409` | 版本冲突 |
 
-`requestId` 用于幂等；演示 Handler 的幂等记录只保存在当前进程内存中。
+`requestId` 用于幂等；客户数据和乐观锁版本已持久化到 MySQL，演示 Handler 的幂等记录仍只保存在当前进程内存中。

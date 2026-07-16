@@ -7,6 +7,12 @@ import AuthPage from './components/AuthPage.vue';
 import DynamicCard from './components/DynamicCard.vue';
 import FormDrawer from './components/FormDrawer.vue';
 import SecurityAdmin from './components/SecurityAdmin.vue';
+const securitySections = [
+    { key: 'users', label: '用户管理' },
+    { key: 'roles', label: '角色管理' },
+    { key: 'permissions', label: '权限配置' },
+    { key: 'menus', label: '菜单配置' }
+];
 const route = useRoute();
 const router = useRouter();
 const userId = computed(() => authState.account?.userId ?? '');
@@ -27,8 +33,11 @@ const activePage = computed(() => {
 });
 const isAuthRoute = computed(() => route.name === 'login' || route.name === 'register');
 const isSecurityAdmin = computed(() => route.name === 'security-admin');
-const currentMenu = computed(() => authState.menus.find(menu => route.path === menu.path.split('?')[0]));
-const permissionPreview = computed(() => authState.account?.permissions.slice(0, 4) ?? []);
+const activeSecuritySection = computed(() => {
+    const section = String(route.query.section ?? 'users');
+    return securitySections.some(item => item.key === section) ? section : 'users';
+});
+const activeSecurityLabel = computed(() => securitySections.find(item => item.key === activeSecuritySection.value)?.label ?? '用户管理');
 const customerId = computed(() => String(route.query.customerId ?? '1001'));
 const pageCode = computed(() => (activePage.value === 'customer' ? 'customer_detail' : 'home'));
 const pageContext = computed(() => activePage.value === 'customer'
@@ -41,22 +50,8 @@ const heading = computed(() => {
         return '客户详情';
     if (activePage.value === 'orders')
         return '客户订单';
-    return '工作首页';
+    return '首页';
 });
-const subtitle = computed(() => {
-    if (activePage.value === 'customer') {
-        return `客户编号 ${customerId.value} · 卡片由后端能力、租户与权限动态决定`;
-    }
-    if (activePage.value === 'orders') {
-        return `客户 ${pageContext.value.customerId ?? '-'} · 状态 ${pageContext.value.status ?? '全部'}`;
-    }
-    return '面向当前用户动态装配工作摘要与业务插件卡片';
-});
-const avatar = computed(() => activePage.value === 'customer'
-    ? customerId.value.slice(-2)
-    : activePage.value === 'orders'
-        ? 'OR'
-        : 'HI');
 const executeCardAction = createActionRuntime(router, {
     refreshCards,
     openForm(request) {
@@ -103,6 +98,9 @@ function switchPage(kind) {
 }
 function navigateMenu(path) {
     router.push(path);
+}
+function navigateSecuritySection(section) {
+    router.push({ name: 'security-admin', query: { section } });
 }
 async function signOut() {
     await logout();
@@ -180,16 +178,6 @@ else {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.b, __VLS_intrinsicElements.b)({});
     __VLS_asFunctionalElement(__VLS_intrinsicElements.small, __VLS_intrinsicElements.small)({});
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-        ...{ class: "topbar-context" },
-    });
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.span)({
-        ...{ class: "environment-dot" },
-    });
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.i, __VLS_intrinsicElements.i)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.strong, __VLS_intrinsicElements.strong)({});
-    (__VLS_ctx.currentMenu?.name ?? __VLS_ctx.heading);
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
         ...{ class: "topbar-actions" },
     });
     if (!__VLS_ctx.isSecurityAdmin) {
@@ -217,7 +205,6 @@ else {
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
         ...{ class: "workspace" },
-        ...{ class: ({ 'admin-workspace': __VLS_ctx.isSecurityAdmin }) },
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.aside, __VLS_intrinsicElements.aside)({
         ...{ class: "left-sidebar" },
@@ -233,6 +220,7 @@ else {
         'aria-label': "主菜单",
     });
     for (const [menu] of __VLS_getVForSourceType((__VLS_ctx.authState.menus))) {
+        (menu.id);
         __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
             ...{ onClick: (...[$event]) => {
                     if (!!(!__VLS_ctx.authState.initialized))
@@ -241,7 +229,7 @@ else {
                         return;
                     __VLS_ctx.navigateMenu(menu.path);
                 } },
-            key: (menu.id),
+            ...{ class: "primary-menu" },
             ...{ class: ({ active: __VLS_ctx.route.path === menu.path.split('?')[0] }) },
         });
         __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
@@ -258,6 +246,31 @@ else {
         __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
             ...{ class: "menu-arrow" },
         });
+        if (__VLS_ctx.isSecurityAdmin && menu.path.split('?')[0] === '/admin/security') {
+            __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+                ...{ class: "side-submenu" },
+                'aria-label': "权限管理二级菜单",
+            });
+            for (const [item] of __VLS_getVForSourceType((__VLS_ctx.securitySections))) {
+                __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
+                    ...{ onClick: (...[$event]) => {
+                            if (!!(!__VLS_ctx.authState.initialized))
+                                return;
+                            if (!!(!__VLS_ctx.authState.account || __VLS_ctx.isAuthRoute))
+                                return;
+                            if (!(__VLS_ctx.isSecurityAdmin && menu.path.split('?')[0] === '/admin/security'))
+                                return;
+                            __VLS_ctx.navigateSecuritySection(item.key);
+                        } },
+                    key: (item.key),
+                    ...{ class: ({ active: __VLS_ctx.activeSecuritySection === item.key }) },
+                });
+                __VLS_asFunctionalElement(__VLS_intrinsicElements.span)({
+                    ...{ class: "submenu-dot" },
+                });
+                (item.label);
+            }
+        }
     }
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
         ...{ class: "sidebar-foot" },
@@ -271,6 +284,19 @@ else {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.section, __VLS_intrinsicElements.section)({
         ...{ class: "center-stage" },
     });
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.nav, __VLS_intrinsicElements.nav)({
+        ...{ class: "page-directory" },
+        'aria-label': "页面目录",
+    });
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({});
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.i, __VLS_intrinsicElements.i)({});
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.strong, __VLS_intrinsicElements.strong)({});
+    (__VLS_ctx.isSecurityAdmin ? '权限管理' : __VLS_ctx.heading);
+    if (__VLS_ctx.isSecurityAdmin) {
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.i, __VLS_intrinsicElements.i)({});
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.strong, __VLS_intrinsicElements.strong)({});
+        (__VLS_ctx.activeSecurityLabel);
+    }
     if (__VLS_ctx.isSecurityAdmin) {
         /** @type {[typeof SecurityAdmin, ]} */ ;
         // @ts-ignore
@@ -281,34 +307,6 @@ else {
         __VLS_asFunctionalElement(__VLS_intrinsicElements.main, __VLS_intrinsicElements.main)({
             ...{ class: "business-main" },
         });
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.section, __VLS_intrinsicElements.section)({
-            ...{ class: "hero" },
-        });
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-            ...{ class: "breadcrumb" },
-        });
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({});
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.i, __VLS_intrinsicElements.i)({});
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.strong, __VLS_intrinsicElements.strong)({});
-        (__VLS_ctx.heading);
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
-            ...{ class: "eyebrow" },
-        });
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.h1, __VLS_intrinsicElements.h1)({});
-        (__VLS_ctx.heading);
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.p, __VLS_intrinsicElements.p)({});
-        (__VLS_ctx.subtitle);
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-            ...{ class: "hero-side" },
-        });
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
-            ...{ class: "hero-label" },
-        });
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-            ...{ class: "avatar" },
-        });
-        (__VLS_ctx.avatar);
         if (__VLS_ctx.loading) {
             __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
                 ...{ class: "page-state" },
@@ -390,81 +388,6 @@ else {
             });
         }
     }
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.aside, __VLS_intrinsicElements.aside)({
-        ...{ class: "right-rail" },
-    });
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.section, __VLS_intrinsicElements.section)({
-        ...{ class: "rail-card account-summary" },
-    });
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
-        ...{ class: "rail-kicker" },
-    });
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-        ...{ class: "rail-user" },
-    });
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
-        ...{ class: "large-avatar" },
-    });
-    (__VLS_ctx.authState.account.displayName.slice(0, 1));
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.b, __VLS_intrinsicElements.b)({});
-    (__VLS_ctx.authState.account.displayName);
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.small, __VLS_intrinsicElements.small)({});
-    (__VLS_ctx.authState.account.username);
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-        ...{ class: "rail-metrics" },
-    });
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.b, __VLS_intrinsicElements.b)({});
-    (__VLS_ctx.authState.account.roles.length);
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.small, __VLS_intrinsicElements.small)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.b, __VLS_intrinsicElements.b)({});
-    (__VLS_ctx.authState.account.permissions.length);
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.small, __VLS_intrinsicElements.small)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.section, __VLS_intrinsicElements.section)({
-        ...{ class: "rail-card" },
-    });
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-        ...{ class: "rail-title" },
-    });
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.small, __VLS_intrinsicElements.small)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.dl, __VLS_intrinsicElements.dl)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.dt, __VLS_intrinsicElements.dt)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.dd, __VLS_intrinsicElements.dd)({});
-    (__VLS_ctx.isSecurityAdmin ? 'security_admin' : __VLS_ctx.pageCode);
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.dt, __VLS_intrinsicElements.dt)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.dd, __VLS_intrinsicElements.dd)({});
-    (__VLS_ctx.currentMenu?.name ?? '内部跳转');
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.dt, __VLS_intrinsicElements.dt)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.dd, __VLS_intrinsicElements.dd)({});
-    (__VLS_ctx.authState.account.tenantId);
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.section, __VLS_intrinsicElements.section)({
-        ...{ class: "rail-card" },
-    });
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-        ...{ class: "rail-title" },
-    });
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({});
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.small, __VLS_intrinsicElements.small)({});
-    (__VLS_ctx.authState.account.permissions.length);
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-        ...{ class: "permission-list" },
-    });
-    for (const [permission] of __VLS_getVForSourceType((__VLS_ctx.permissionPreview))) {
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
-            key: (permission),
-        });
-        (permission);
-    }
-    if (__VLS_ctx.authState.account.permissions.length > __VLS_ctx.permissionPreview.length) {
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.small, __VLS_intrinsicElements.small)({});
-        (__VLS_ctx.authState.account.permissions.length - __VLS_ctx.permissionPreview.length);
-    }
     __VLS_asFunctionalElement(__VLS_intrinsicElements.footer, __VLS_intrinsicElements.footer)({
         ...{ class: "app-footer" },
     });
@@ -502,32 +425,28 @@ if (__VLS_ctx.toast) {
 /** @type {__VLS_StyleScopedClasses['topbar']} */ ;
 /** @type {__VLS_StyleScopedClasses['brand-block']} */ ;
 /** @type {__VLS_StyleScopedClasses['brand-mark']} */ ;
-/** @type {__VLS_StyleScopedClasses['topbar-context']} */ ;
-/** @type {__VLS_StyleScopedClasses['environment-dot']} */ ;
 /** @type {__VLS_StyleScopedClasses['topbar-actions']} */ ;
 /** @type {__VLS_StyleScopedClasses['icon-button']} */ ;
 /** @type {__VLS_StyleScopedClasses['top-account']} */ ;
 /** @type {__VLS_StyleScopedClasses['mini-avatar']} */ ;
 /** @type {__VLS_StyleScopedClasses['logout-button']} */ ;
 /** @type {__VLS_StyleScopedClasses['workspace']} */ ;
-/** @type {__VLS_StyleScopedClasses['admin-workspace']} */ ;
 /** @type {__VLS_StyleScopedClasses['left-sidebar']} */ ;
 /** @type {__VLS_StyleScopedClasses['sidebar-heading']} */ ;
 /** @type {__VLS_StyleScopedClasses['side-menu']} */ ;
+/** @type {__VLS_StyleScopedClasses['primary-menu']} */ ;
 /** @type {__VLS_StyleScopedClasses['active']} */ ;
 /** @type {__VLS_StyleScopedClasses['menu-icon']} */ ;
 /** @type {__VLS_StyleScopedClasses['menu-copy']} */ ;
 /** @type {__VLS_StyleScopedClasses['menu-arrow']} */ ;
+/** @type {__VLS_StyleScopedClasses['side-submenu']} */ ;
+/** @type {__VLS_StyleScopedClasses['active']} */ ;
+/** @type {__VLS_StyleScopedClasses['submenu-dot']} */ ;
 /** @type {__VLS_StyleScopedClasses['sidebar-foot']} */ ;
 /** @type {__VLS_StyleScopedClasses['status-dot']} */ ;
 /** @type {__VLS_StyleScopedClasses['center-stage']} */ ;
+/** @type {__VLS_StyleScopedClasses['page-directory']} */ ;
 /** @type {__VLS_StyleScopedClasses['business-main']} */ ;
-/** @type {__VLS_StyleScopedClasses['hero']} */ ;
-/** @type {__VLS_StyleScopedClasses['breadcrumb']} */ ;
-/** @type {__VLS_StyleScopedClasses['eyebrow']} */ ;
-/** @type {__VLS_StyleScopedClasses['hero-side']} */ ;
-/** @type {__VLS_StyleScopedClasses['hero-label']} */ ;
-/** @type {__VLS_StyleScopedClasses['avatar']} */ ;
 /** @type {__VLS_StyleScopedClasses['page-state']} */ ;
 /** @type {__VLS_StyleScopedClasses['page-state']} */ ;
 /** @type {__VLS_StyleScopedClasses['error']} */ ;
@@ -535,18 +454,6 @@ if (__VLS_ctx.toast) {
 /** @type {__VLS_StyleScopedClasses['page-state']} */ ;
 /** @type {__VLS_StyleScopedClasses['empty']} */ ;
 /** @type {__VLS_StyleScopedClasses['orders-placeholder']} */ ;
-/** @type {__VLS_StyleScopedClasses['right-rail']} */ ;
-/** @type {__VLS_StyleScopedClasses['rail-card']} */ ;
-/** @type {__VLS_StyleScopedClasses['account-summary']} */ ;
-/** @type {__VLS_StyleScopedClasses['rail-kicker']} */ ;
-/** @type {__VLS_StyleScopedClasses['rail-user']} */ ;
-/** @type {__VLS_StyleScopedClasses['large-avatar']} */ ;
-/** @type {__VLS_StyleScopedClasses['rail-metrics']} */ ;
-/** @type {__VLS_StyleScopedClasses['rail-card']} */ ;
-/** @type {__VLS_StyleScopedClasses['rail-title']} */ ;
-/** @type {__VLS_StyleScopedClasses['rail-card']} */ ;
-/** @type {__VLS_StyleScopedClasses['rail-title']} */ ;
-/** @type {__VLS_StyleScopedClasses['permission-list']} */ ;
 /** @type {__VLS_StyleScopedClasses['app-footer']} */ ;
 /** @type {__VLS_StyleScopedClasses['toast']} */ ;
 var __VLS_dollars;
@@ -558,6 +465,7 @@ const __VLS_self = (await import('vue')).defineComponent({
             DynamicCard: DynamicCard,
             FormDrawer: FormDrawer,
             SecurityAdmin: SecurityAdmin,
+            securitySections: securitySections,
             route: route,
             page: page,
             error: error,
@@ -569,16 +477,14 @@ const __VLS_self = (await import('vue')).defineComponent({
             activePage: activePage,
             isAuthRoute: isAuthRoute,
             isSecurityAdmin: isSecurityAdmin,
-            currentMenu: currentMenu,
-            permissionPreview: permissionPreview,
-            pageCode: pageCode,
+            activeSecuritySection: activeSecuritySection,
+            activeSecurityLabel: activeSecurityLabel,
             pageContext: pageContext,
             heading: heading,
-            subtitle: subtitle,
-            avatar: avatar,
             loadPage: loadPage,
             switchPage: switchPage,
             navigateMenu: navigateMenu,
+            navigateSecuritySection: navigateSecuritySection,
             signOut: signOut,
             handleCardAction: handleCardAction,
             handleFormSaved: handleFormSaved,

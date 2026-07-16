@@ -2,6 +2,7 @@ package com.example.metadataui.customization.demo;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -22,21 +23,33 @@ public class DemoCardDataController {
 
     @GetMapping("/api/customers/{id}/tags")
     public List<Map<String, String>> tags(@PathVariable String id) {
-        return List.of(Map.of("name", "重点客户", "color", "#2563eb"),
-                Map.of("name", "高活跃", "color", "#059669"), Map.of("name", "华东区", "color", "#7c3aed"));
+        return customerRepository.tags(id);
     }
 
     @GetMapping("/api/customers/{id}/traces")
     public List<Map<String, String>> traces(@PathVariable String id) {
-        return List.of(
-                Map.of(
-                        "timestamp", "2026-07-15 14:20",
-                        "eventName", "浏览产品",
-                        "description", "查看了企业版方案"),
-                Map.of(
-                        "timestamp", "2026-07-14 09:10",
-                        "eventName", "销售跟进",
-                        "description", "电话沟通需求"));
+        return customerRepository.traces(id);
+    }
+
+    @GetMapping("/api/customers/{id}/orders")
+    public List<Map<String, Object>> orders(@PathVariable String id) {
+        return customerRepository.orders(id);
+    }
+
+    @GetMapping("/api/orders")
+    public List<Map<String, Object>> orderList(@RequestParam String customerId,
+                                               @RequestParam(required = false) String status) {
+        return customerRepository.orders(customerId, status);
+    }
+
+    @GetMapping("/api/orders/{orderNo}")
+    public Map<String, Object> order(@PathVariable String orderNo) {
+        return customerRepository.order(orderNo);
+    }
+
+    @GetMapping("/api/members/{memberId}")
+    public Map<String, Object> member(@PathVariable String memberId) {
+        return customerRepository.member(memberId);
     }
 
     @GetMapping("/api/home/{userId}/work-summary")

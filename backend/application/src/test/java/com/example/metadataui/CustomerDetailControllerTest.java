@@ -47,4 +47,54 @@ class CustomerDetailControllerTest {
                 .andExpect(jsonPath("$.tenantId").value("demo"))
                 .andExpect(jsonPath("$.userId").value("user-1"));
     }
+
+    @Test
+    void readsCustomerTagsTracesOrdersAndMemberFromDatabase() throws Exception {
+        mvc.perform(get("/api/customers/1001/basic"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.customerId").value("1001"))
+                .andExpect(jsonPath("$.unionId").value("o_demo_union_1001"))
+                .andExpect(jsonPath("$.mobile").value("13800138000"));
+
+        mvc.perform(get("/api/customers/1001/tags"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[0].name").value("重点客户"));
+
+        mvc.perform(get("/api/customers/1001/traces"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].eventName").value("浏览产品"));
+
+        mvc.perform(get("/api/customers/1001/orders"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].orderNo").value("O20260715001"))
+                .andExpect(jsonPath("$[0].memberId").value("M10001"));
+
+        mvc.perform(get("/api/orders/O20260715001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.memberId").value("M10001"));
+
+        mvc.perform(get("/api/orders").param("customerId", "1001").param("status", "OPEN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].orderNo").value("O20260710002"));
+
+        mvc.perform(get("/api/members/M10001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.memberId").value("M10001"))
+                .andExpect(jsonPath("$.unionId").value("o_demo_union_1001"))
+                .andExpect(jsonPath("$.mobile").value("13800138000"));
+    }
+
+    @Test
+    void returnsNotFoundForUnknownBusinessData() throws Exception {
+        mvc.perform(get("/api/customers/missing/basic"))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/orders/missing"))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/members/missing"))
+                .andExpect(status().isNotFound());
+    }
 }
