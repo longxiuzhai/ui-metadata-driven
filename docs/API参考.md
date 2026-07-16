@@ -2,16 +2,40 @@
 
 本文只记录当前源码中实际启用的接口。默认后端地址为 `http://localhost:8080`；前端开发环境通过 Vite 代理使用相对路径 `/api/...`。
 
-## 1. 演示上下文请求头
+## 1. 认证与测试请求头
+
+除注册和登录外，接口需要：
+
+```http
+Authorization: Bearer <token>
+```
+
+Token 由 `POST /api/auth/login` 或 `POST /api/auth/register` 返回。
 
 | 请求头 | 默认值 | 说明 |
 |---|---|---|
 | `X-Tenant-Id` | `demo` | 演示租户 |
 | `X-User-Id` | `user-1` | 演示用户 |
-| `X-Permissions` | 当前演示账号权限 | 逗号分隔；提供空字符串表示空权限 |
-| `X-Features` | 当前演示账号 Feature | 逗号分隔；提供空字符串表示空 Feature |
+| `X-Permissions` | 当前账号权限 | 仅测试配置可覆盖；逗号分隔 |
+| `X-Features` | 当前账号 Feature | 仅测试配置可覆盖；逗号分隔 |
 
-动作 API 使用前三个请求头，不读取 `X-Features`。这些头是演示覆盖机制，不是生产认证协议。
+生产配置忽略这些身份和权限覆盖头。动作 API 不读取 `X-Features`。
+
+### 注册与登录
+
+```http
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/logout
+```
+
+登录请求：
+
+```json
+{ "tenantId": "demo", "username": "admin", "password": "Admin123!" }
+```
+
+响应包含 `token` 和 `account`。注册请求包含 `username/password/displayName/email`，注册成功自动绑定 `USER` 角色。
 
 ## 2. 获取当前账号
 
@@ -19,10 +43,11 @@
 GET /api/accounts/me
 ```
 
-示例：
+以下示例中的 `<token>` 均替换为登录响应中的 Token。获取当前账号：
 
 ```bash
-curl 'http://localhost:8080/api/accounts/me'
+curl 'http://localhost:8080/api/accounts/me' \
+  -H 'Authorization: Bearer <token>'
 ```
 
 响应包含 `tenantId`、`userId`、`permissions` 和 `features`。
@@ -43,7 +68,8 @@ GET /api/ui/pages/{pageCode}/cards
 示例：
 
 ```bash
-curl 'http://localhost:8080/api/ui/pages/customer_detail/cards?customerId=1001'
+curl 'http://localhost:8080/api/ui/pages/customer_detail/cards?customerId=1001' \
+  -H 'Authorization: Bearer <token>'
 ```
 
 精简响应结构：
@@ -69,10 +95,11 @@ curl 'http://localhost:8080/api/ui/pages/customer_detail/cards?customerId=1001'
 }
 ```
 
-按权限和 Feature 调试：
+测试环境按权限和 Feature 覆盖调试：
 
 ```bash
 curl 'http://localhost:8080/api/ui/pages/customer_detail/cards?customerId=1001' \
+  -H 'Authorization: Bearer <token>' \
   -H 'X-Permissions: customer:read' \
   -H 'X-Features: customerTags'
 ```

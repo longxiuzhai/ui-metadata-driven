@@ -1,8 +1,26 @@
+export async function apiRequest(url, init = {}) {
+    const headers = new Headers(init.headers);
+    const token = localStorage.getItem('metadata-ui-token');
+    if (token)
+        headers.set('Authorization', `Bearer ${token}`);
+    if (init.body && !headers.has('Content-Type'))
+        headers.set('Content-Type', 'application/json');
+    const response = await fetch(url, { ...init, headers });
+    if (response.status === 401) {
+        localStorage.removeItem('metadata-ui-token');
+        if (!url.startsWith('/api/auth/'))
+            window.location.assign('/login');
+    }
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.message ?? `请求失败 (${response.status})`);
+    }
+    if (response.status === 204)
+        return undefined;
+    return response.json();
+}
 async function getCardPage(url, pageCode) {
-    const response = await fetch(url);
-    if (!response.ok)
-        throw new Error(`元数据加载失败 (${response.status})`);
-    const value = await response.json();
+    const value = await apiRequest(url);
     if (value.version !== '1.0' || value.pageCode !== pageCode || !Array.isArray(value.cards)) {
         throw new Error('不支持的元数据协议');
     }
@@ -22,23 +40,13 @@ export async function loadCardData(urlTemplate, context, signal) {
     if (!url.startsWith('/api/')) {
         throw new Error('拒绝访问非站内数据源');
     }
-    const response = await fetch(url, { signal });
-    if (!response.ok) {
-        throw new Error(`数据加载失败 (${response.status})`);
-    }
-    return response.json();
+    return apiRequest(url, { signal });
 }
 async function postAction(url, body) {
-    const response = await fetch(url, {
+    return apiRequest(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
     });
-    if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({}));
-        throw new Error(errorBody.message ?? `动作执行失败 (${response.status})`);
-    }
-    return response.json();
 }
 export function prepareAction(actionCode, pageCode, cardCode, params) {
     return postAction(`/api/ui/actions/${encodeURIComponent(actionCode)}/prepare`, {

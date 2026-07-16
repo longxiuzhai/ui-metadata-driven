@@ -8,13 +8,22 @@
 
 | 层次 | 技术 |
 |---|---|
-| 后端 | Java 11、Spring Boot 2.7.18、Maven 多模块 |
+| 后端 | Java 11、Spring Boot 2.7.18、Spring Security、MyBatis-Plus 3.5.17、Flyway |
 | 前端 | Vue 3、TypeScript、Vue Router、Vite、Vitest |
+| 数据库 | MySQL 8；测试使用 H2 MySQL 兼容模式 |
 | 元数据协议 | 强类型 Java 模型 + 后端白名单校验 + 前端组件/路由/表单注册表 |
 
 ## 5 分钟启动
 
-准备 Java 11+、Maven 3.6+、Node.js 和 npm。仓库包含 `package-lock.json`，首次安装优先使用 `npm ci`。
+准备 Java 11+、Maven 3.6+、Node.js、npm 和 MySQL 8。仓库提供 Docker Compose：
+
+```bash
+docker compose up -d mysql
+```
+
+默认数据库、用户名和密码都是 `metadata_ui`。Flyway 会自动建表，应用首次启动会创建管理员 `admin / Admin123!`，请在非本地环境通过环境变量修改密码和 JWT 密钥。
+
+仓库包含 `package-lock.json`，首次安装优先使用 `npm ci`。
 
 终端一：
 
@@ -38,7 +47,7 @@ npm run dev
 - 首页：<http://localhost:5173/>
 - 客户详情：<http://localhost:5173/customer-detail?customerId=1001>
 
-Vite 将 `/api` 代理到 `http://localhost:8080`。后端使用内存演示数据，不需要数据库或其他中间件。
+Vite 将 `/api` 代理到 `http://localhost:8080`。账号、角色、权限和菜单保存在 MySQL；原有客户卡片数据仍是内存演示数据。
 
 ## 项目结构
 
@@ -79,6 +88,8 @@ GET /api/ui/pages/{pageCode}/cards
 
 客户详情的“基本信息”卡片还演示了完整修改链路：元数据动作 → 前端表单注册表 → Action prepare/execute API → 后端 `UiActionHandler` → 定向刷新卡片。
 
+账号与权限使用 RBAC 模型：注册用户自动绑定 `USER` 角色，JWT 请求会从数据库重新加载最新角色和权限，菜单按角色与权限动态返回；管理员可在“权限管理”中配置用户、角色、权限和菜单。
+
 ## 常用验证命令
 
 ```bash
@@ -101,5 +112,6 @@ npm run build
 - [API 参考](docs/API参考.md)：当前有效接口、请求头、协议和示例
 - [扩展卡片开发指南](docs/扩展卡片开发指南.md)：新增 Provider、条件和组件的纵向步骤
 - [页面动作与编辑能力设计方案](docs/页面动作与编辑能力设计方案.md)：动作协议和编辑链路
+- [账号与权限开发指南](docs/账号与权限开发指南.md)：MySQL、JWT、RBAC、菜单和管理接口
 
 第一次接手项目，建议依次阅读 README → 开发指南 → 架构说明，再根据任务查看卡片扩展或动作设计文档。

@@ -18,6 +18,6 @@ public class AccountController {
     public AccountIdentity me(
             @RequestHeader(name = "X-Tenant-Id", defaultValue = "demo") String tenantId,
             @RequestHeader(name = "X-User-Id", defaultValue = "user-1") String userId) {
-        return accountService.load(tenantId, userId);
+        return accountService.currentIdentity().orElseGet(() -> accountService.load(tenantId, userId));
     }
 }

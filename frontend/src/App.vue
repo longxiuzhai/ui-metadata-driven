@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createActionRuntime } from './actions/ActionRuntime'
+import { authState, initializeAuth, logout } from './auth'
 import { getCustomerDetailCards, getHomeCards } from './api'
+import AuthPage from './components/AuthPage.vue'
 import DynamicCard from './components/DynamicCard.vue'
 import FormDrawer from './components/FormDrawer.vue'
+import SecurityAdmin from './components/SecurityAdmin.vue'
 import type { ActionResult, CardAction, CardPageDefinition, OpenFormRequest } from './types'
 
 type PageKind = 'home' | 'customer' | 'orders'
 
 const route = useRoute()
 const router = useRouter()
-const userId = ref('user-1')
+const userId = computed(() => authState.account?.userId ?? '')
 const page = ref<CardPageDefinition | null>(null)
 const error = ref('')
 const loading = ref(true)
@@ -26,6 +29,8 @@ const activePage = computed<PageKind>(() => {
   if (route.name === 'order-list') return 'orders'
   return 'home'
 })
+const isAuthRoute = computed(() => route.name === 'login' || route.name === 'register')
+const isSecurityAdmin = computed(() => route.name === 'security-admin')
 const customerId = computed(() => String(route.query.customerId ?? '1001'))
 const pageCode = computed(() => (activePage.value === 'customer' ? 'customer_detail' : 'home'))
 
@@ -70,6 +75,11 @@ const executeCardAction = createActionRuntime(router, {
 })
 
 async function loadPage() {
+  if (!authState.account || isAuthRoute.value || isSecurityAdmin.value) {
+    page.value = null
+    loading.value = false
+    return
+  }
   if (activePage.value === 'orders') {
     page.value = null
     error.value = ''
@@ -103,6 +113,15 @@ function switchPage(kind: 'home' | 'customer') {
   )
 }
 
+function navigateMenu(path: string) {
+  router.push(path)
+}
+
+async function signOut() {
+  await logout()
+  await router.replace('/login')
+}
+
 function refreshCards(cardCodes: string[]) {
   for (const cardCode of cardCodes) {
     refreshTokens.value[cardCode] = (refreshTokens.value[cardCode] ?? 0) + 1
@@ -129,56 +148,75 @@ function handleFormSaved(result: ActionResult) {
   notify(result.message)
 }
 
-watch(() => route.fullPath, loadPage, { immediate: true })
+onMounted(async () => {
+  await initializeAuth()
+  if (!authState.account && !isAuthRoute.value) await router.replace('/login')
+  if (authState.account && isAuthRoute.value) await router.replace('/')
+  await loadPage()
+})
+
+watch(() => route.fullPath, async () => {
+  if (authState.initialized && !authState.account && !isAuthRoute.value) {
+    await router.replace('/login')
+    return
+  }
+  await loadPage()
+})
 </script>
 
 <template>
-  <main>
-    <nav>
+  <div v-if="!authState.initialized" class="boot-state">正在初始化账号与权限…</div>
+  <AuthPage v-else-if="!authState.account || isAuthRoute" />
+  <template v-else>
+    <nav class="app-nav">
       <strong>元数据 UI</strong>
-      <div>
-        <button :class="{ active: activePage === 'home' }" @click="switchPage('home')">
-          首页
-        </button>
-        <button :class="{ active: activePage === 'customer' }" @click="switchPage('customer')">
-          客户详情
-        </button>
+      <div class="menu-list">
+        <button v-for="menu in authState.menus" :key="menu.id"
+                :class="{ active: route.path === menu.path.split('?')[0] }"
+                @click="navigateMenu(menu.path)">{{ menu.name }}</button>
+      </div>
+      <div class="account-box">
+        <span><b>{{ authState.account.displayName }}</b><small>{{ authState.account.username }}</small></span>
+        <button @click="signOut">退出</button>
       </div>
     </nav>
 
-    <section class="hero">
-      <div>
-        <span class="eyebrow">METADATA-DRIVEN UI · MVP</span>
-        <h1>{{ heading }}</h1>
-        <p>{{ subtitle }}</p>
-      </div>
-      <div class="avatar">{{ avatar }}</div>
-    </section>
+    <SecurityAdmin v-if="isSecurityAdmin" />
+    <main v-else>
+      <section class="hero">
+        <div>
+          <span class="eyebrow">METADATA-DRIVEN UI · RBAC</span>
+          <h1>{{ heading }}</h1>
+          <p>{{ subtitle }}</p>
+        </div>
+        <div class="avatar">{{ avatar }}</div>
+      </section>
 
-    <div v-if="loading" class="page-state">正在装配页面卡片…</div>
-    <div v-else-if="error" class="page-state error">
-      {{ error }}
-      <button @click="loadPage">重试</button>
-    </div>
-    <section v-else-if="page" class="grid" :style="{ '--gap': `${page.layout.gap}px` }">
-      <DynamicCard
-        v-for="card in page.cards"
-        :key="card.code"
-        :definition="card"
-        :context="pageContext"
-        :refresh-token="refreshTokens[card.code] ?? 0"
-        :style="{ '--xs': card.span.xs, '--md': card.span.md, '--xl': card.span.xl }"
-        @action="(action, data) => handleCardAction(action, data, card.code)"
-      />
-      <div v-if="page.cards.length === 0" class="page-state empty">当前没有可用卡片</div>
-    </section>
-    <section v-else-if="activePage === 'orders'" class="orders-placeholder">
-      <h2>动态参数跳转成功</h2>
-      <p>当前页面从卡片动作接收到以下查询参数：</p>
-      <pre>{{ JSON.stringify(pageContext, null, 2) }}</pre>
-      <button @click="switchPage('customer')">返回客户详情</button>
-    </section>
-  </main>
+      <div v-if="loading" class="page-state">正在装配页面卡片…</div>
+      <div v-else-if="error" class="page-state error">
+        {{ error }}
+        <button @click="loadPage">重试</button>
+      </div>
+      <section v-else-if="page" class="grid" :style="{ '--gap': `${page.layout.gap}px` }">
+        <DynamicCard
+          v-for="card in page.cards"
+          :key="card.code"
+          :definition="card"
+          :context="pageContext"
+          :refresh-token="refreshTokens[card.code] ?? 0"
+          :style="{ '--xs': card.span.xs, '--md': card.span.md, '--xl': card.span.xl }"
+          @action="(action, data) => handleCardAction(action, data, card.code)"
+        />
+        <div v-if="page.cards.length === 0" class="page-state empty">当前没有可用卡片</div>
+      </section>
+      <section v-else-if="activePage === 'orders'" class="orders-placeholder">
+        <h2>动态参数跳转成功</h2>
+        <p>当前页面从卡片动作接收到以下查询参数：</p>
+        <pre>{{ JSON.stringify(pageContext, null, 2) }}</pre>
+        <button @click="switchPage('customer')">返回客户详情</button>
+      </section>
+    </main>
+  </template>
 
   <FormDrawer v-model="formOpen" :request="formRequest" @saved="handleFormSaved" />
   <div v-if="toast" class="toast">{{ toast }}</div>
@@ -208,6 +246,35 @@ nav {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 28px;
+}
+
+.app-nav {
+  max-width: 1180px;
+  margin: 0 auto 20px;
+  padding: 20px 24px 0;
+}
+
+.account-box {
+  align-items: center;
+  margin-left: auto;
+}
+
+.account-box span {
+  display: grid;
+  color: #334155;
+  font-size: 13px;
+  text-align: right;
+}
+
+.account-box small {
+  color: #94a3b8;
+}
+
+.boot-state {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  color: #64748b;
 }
 
 nav strong {

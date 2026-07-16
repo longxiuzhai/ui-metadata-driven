@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: metadata-ui-mysql
+    environment:
+      MYSQL_DATABASE: metadata_ui
+      MYSQL_USER: metadata_ui
+      MYSQL_PASSWORD: metadata_ui
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - metadata-ui-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  metadata-ui-mysql-data:
