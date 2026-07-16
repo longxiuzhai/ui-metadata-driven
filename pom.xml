@@ -3,21 +3,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.example.metadataui</groupId>
-        <artifactId>metadata-ui</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.18</version>
+        <relativePath/>
     </parent>
     <groupId>com.example.metadataui</groupId>
-    <artifactId>metadata-ui-parent</artifactId>
+    <artifactId>metadata-ui</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
+
     <modules>
-        <module>card-platform</module>
-        <module>customer-detail-contract</module>
-        <module>customer-detail-feature</module>
-        <module>plugins/customer-tags-plugin</module>
-        <module>plugins/behavior-trace-plugin</module>
-        <module>application</module>
+        <module>backend</module>
     </modules>
     <properties>
         <java.version>11</java.version>
