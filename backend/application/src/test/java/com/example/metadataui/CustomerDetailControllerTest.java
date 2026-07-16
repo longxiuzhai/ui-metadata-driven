@@ -32,7 +32,7 @@ class CustomerDetailControllerTest {
 
     @Test
     void filtersByPermissionAndFeature() throws Exception {
-        mvc.perform(get("/api/ui/customer-detail/cards").param("customerId", "1001")
+        mvc.perform(get("/api/ui/pages/customer_detail/cards").param("customerId", "1001")
                         .header("X-Permissions", "customer:read")
                         .header("X-Features", "customerTags"))
                 .andExpect(status().isOk())

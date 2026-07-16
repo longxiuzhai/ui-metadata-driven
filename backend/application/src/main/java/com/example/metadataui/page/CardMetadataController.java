@@ -32,25 +32,4 @@ public class CardMetadataController {
             @RequestHeader(name = "X-Features", required = false) String features) {
         return service.getCards(contextFactory.create(pageCode, tenantId, userId, permissions, features, parameters));
     }
-//
-//    @GetMapping("/customer-detail/cards")
-//    public CardPageDefinition customerDetailCards(
-//            @RequestParam Map<String, String> parameters,
-//            @RequestHeader(name = "X-Tenant-Id", defaultValue = "demo") String tenantId,
-//            @RequestHeader(name = "X-User-Id", defaultValue = "user-1") String userId,
-//            @RequestHeader(name = "X-Permissions", required = false) String permissions,
-//            @RequestHeader(name = "X-Features", required = false) String features) {
-//        return service.getCards(contextFactory.create("customer_detail", tenantId, userId,
-//                permissions, features, parameters));
-//    }
-//
-//    @GetMapping("/home/cards")
-//    public CardPageDefinition homeCards(
-//            @RequestParam Map<String, String> parameters,
-//            @RequestHeader(name = "X-Tenant-Id", defaultValue = "demo") String tenantId,
-//            @RequestHeader(name = "X-User-Id", defaultValue = "user-1") String userId,
-//            @RequestHeader(name = "X-Permissions", required = false) String permissions,
-//            @RequestHeader(name = "X-Features", required = false) String features) {
-//        return service.getCards(contextFactory.create("home", tenantId, userId, permissions, features, parameters));
-//    }
 }

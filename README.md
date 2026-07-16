@@ -1,24 +1,22 @@
-# 卡片级元数据驱动 MVP
+# 卡片级元数据驱动 UI
 
-这是“卡片级元数据驱动 UI 精简方案”的可运行验证工程，后端为 Spring Boot 2.7 + Java 11，前端为 Vue 3 + TypeScript。
+这是一个可运行的元数据驱动 UI MVP。后端根据页面、租户、权限和 Feature Flag 动态装配卡片元数据；前端只渲染白名单内的 Vue 组件，并让每张卡片独立加载数据、处理失败和执行受控动作。
 
-## 架构取舍
+项目适合用来验证 CRM/ERP 详情页、工作台和租户定制模块的卡片化扩展方式。它不是低代码平台，也不允许后端下发 JavaScript、Vue 模板、任意 URL 或远程组件。
 
-```text
-Spring Bean 自动发现 Provider
-  → 启动期 Condition（模块/JAR 是否存在、配置开关）
-  → 请求期 @CardConditional（权限、Feature Flag、租户）
-  → Provider.supports（复杂业务条件）
-  → 强类型 Definition + 白名单校验
-  → 排序并返回元数据
-  → Vue Registry 解析组件，卡片独立加载/失败/懒加载
-```
+## 技术栈
 
-这里的 SPI 是 Spring 容器扩展点，不使用 JDK `ServiceLoader`：业务模块只需引入依赖并声明 Provider Bean，即可同时获得依赖注入、AOP 与 Spring Boot Condition 能力。若未来要求运行时装卸外部 JAR，再单独引入插件 ClassLoader，MVP 阶段不承担这部分复杂度。
+| 层次 | 技术 |
+|---|---|
+| 后端 | Java 11、Spring Boot 2.7.18、Maven 多模块 |
+| 前端 | Vue 3、TypeScript、Vue Router、Vite、Vitest |
+| 元数据协议 | 强类型 Java 模型 + 后端白名单校验 + 前端组件/路由/表单注册表 |
 
-## 启动
+## 5 分钟启动
 
-需要 Java 11+、Maven、Node.js。
+准备 Java 11+、Maven 3.6+、Node.js 和 npm。仓库包含 `package-lock.json`，首次安装优先使用 `npm ci`。
+
+终端一：
 
 ```bash
 cd backend
@@ -27,53 +25,81 @@ cd application
 mvn spring-boot:run
 ```
 
+终端二：
+
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-访问首页 `http://localhost:5173/`，或客户详情页 `http://localhost:5173/customer-detail?customerId=1001`。Vite 会把 `/api` 代理到 `localhost:8080`。
+打开：
 
-## 验证过滤
+- 首页：<http://localhost:5173/>
+- 客户详情：<http://localhost:5173/customer-detail?customerId=1001>
 
-默认请求头会开放全部演示能力。可直接请求并改变请求上下文：
+Vite 将 `/api` 代理到 `http://localhost:8080`。后端使用内存演示数据，不需要数据库或其他中间件。
 
-```bash
-curl 'http://localhost:8080/api/ui/pages/customer_detail/cards?customerId=1001' \
-  -H 'X-Permissions: customer:read' \
-  -H 'X-Features: customerTags'
-```
-
-此时只返回基本信息卡，且因为没有 `customer:update`，编辑动作也会被移除。
-
-关闭行为轨迹 Provider：
-
-```bash
-mvn spring-boot:run -Dspring-boot.run.arguments=--metadata.cards.behavior-trace.enabled=false
-```
-
-## 后端模块边界
+## 项目结构
 
 ```text
-card-platform                  通用卡片协议、Condition、校验器，不含客户业务
-tenant-customization           客户详情、首页等租户定制 Provider 与数据接口
-application                    统一接口、账号身份、权限上下文和 Spring Boot 启动
+.
+├── backend/
+│   ├── card-platform/          # 通用元数据/动作协议、SPI、条件、校验和装配
+│   ├── tenant-customization/   # 演示租户的卡片 Provider、数据接口和动作 Handler
+│   └── application/            # Spring Boot 入口、统一 API、账号上下文和集成测试
+├── frontend/
+│   └── src/                    # 页面容器、卡片组件、运行时和白名单注册表
+├── docs/                       # 当前实现对应的开发与架构文档
+├── 卡片级元数据驱动UI精简方案.md  # MVP 的早期方案
+└── 页面级元数据驱动UI设计方案.md  # 更完整方案的设计草案
 ```
 
-定制模块只依赖 `card-platform`，不会依赖核心应用。它通过 `META-INF/spring.factories` 暴露 AutoConfiguration，因此不依赖主应用包扫描。移除 `application/pom.xml` 中的 `tenant-customization` 依赖后，定制 Provider 和数据接口会同时退出应用上下文。
+后端依赖方向是：
 
-所有页面共用 `GET /api/ui/pages/{pageCode}/cards`；原客户详情和首页地址作为兼容入口保留。演示账号可通过 `GET /api/accounts/me` 查看。
+```text
+card-platform ← tenant-customization
+      ↑                 ↑
+      └──── application ┘
+```
 
-## 新增卡片
+`application` 负责组装最终应用；平台模块不依赖业务定制模块。
 
-1. 在 `tenant-customization` 实现通用 `CardProvider`，声明 `pageCode()` 和 `cardCode()`；
-2. 按需添加 `@ConditionalOnProperty` 等启动期条件和 `@CardConditional` 请求期条件；
-3. 复用前端注册表已有组件时，无需修改客户详情页；
-4. 新 UI 形态必须先加入前端 `cardRegistry` 与后端组件白名单。
+## 核心链路
 
-后端不会信任元数据做真实鉴权。示例请求头只用于演示上下文，生产环境应由 Spring Security 的认证信息构造 `CardRequestContext`，数据接口仍需逐个鉴权。
+```text
+GET /api/ui/pages/{pageCode}/cards
+  → 创建当前账号/租户/权限/Feature 上下文
+  → 查找该页面的 CardProvider
+  → 启动开关、通用条件和 supports 依次过滤
+  → 校验并排序 CardDefinition
+  → 前端 cardRegistry 解析组件
+  → 每张卡片独立请求 dataApi
+```
 
-更完整的 Provider 模板、三层 Condition 职责和生产接入检查项见 [`docs/扩展卡片开发指南.md`](docs/扩展卡片开发指南.md)。
+客户详情的“基本信息”卡片还演示了完整修改链路：元数据动作 → 前端表单注册表 → Action prepare/execute API → 后端 `UiActionHandler` → 定向刷新卡片。
 
-页面动作、动态参数跳转、注册表单编辑和后端 Action SPI 的协议及安全边界见 [`docs/页面动作与编辑能力设计方案.md`](docs/页面动作与编辑能力设计方案.md)。客户详情“基本信息”卡片已实现编辑抽屉和“查看订单”动态参数跳转，可作为完整纵向示例。
+## 常用验证命令
+
+```bash
+# 后端全部测试（从仓库根目录执行）
+mvn test
+
+# 前端测试与生产构建
+cd frontend
+npm test
+npm run build
+```
+
+当前有效的统一接口是 `/api/ui/pages/{pageCode}/cards`；旧的页面专用地址不再保留。后端测试、前端测试和构建命令应作为提交前基线全部通过。
+
+## 文档导航
+
+- [文档索引](docs/README.md)：各类文档的用途和阅读顺序
+- [开发指南](docs/开发指南.md)：环境、启动、调试、测试、开发流程和提交检查
+- [架构说明](docs/架构说明.md)：模块边界、请求链路、扩展点和安全边界
+- [API 参考](docs/API参考.md)：当前有效接口、请求头、协议和示例
+- [扩展卡片开发指南](docs/扩展卡片开发指南.md)：新增 Provider、条件和组件的纵向步骤
+- [页面动作与编辑能力设计方案](docs/页面动作与编辑能力设计方案.md)：动作协议和编辑链路
+
+第一次接手项目，建议依次阅读 README → 开发指南 → 架构说明，再根据任务查看卡片扩展或动作设计文档。

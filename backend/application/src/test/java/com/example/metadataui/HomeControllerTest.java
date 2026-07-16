@@ -28,7 +28,7 @@ class HomeControllerTest {
 
     @Test
     void filtersPluginByPermissionAndFeature() throws Exception {
-        mvc.perform(get("/api/ui/home/cards")
+        mvc.perform(get("/api/ui/pages/home/cards")
                         .header("X-Permissions", "home:read")
                         .header("X-Features", ""))
                 .andExpect(status().isOk())
