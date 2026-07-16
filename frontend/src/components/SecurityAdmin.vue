@@ -121,12 +121,13 @@ onMounted(loadAll)
     <div v-else-if="tab === 'users'" class="panel">
       <table><thead><tr><th>账号</th><th>名称</th><th>角色</th><th>状态</th><th></th></tr></thead>
         <tbody><tr v-for="user in users" :key="user.id">
-          <td><strong>{{ user.username }}</strong><small>{{ user.email || '未设置邮箱' }}</small></td>
-          <td>{{ user.displayName }}</td>
-          <td><label v-for="role in roles" :key="role.id" class="check">
-            <input v-model="user.roleIds" type="checkbox" :value="role.id" />{{ role.name }}</label></td>
-          <td><label class="switch"><input v-model="user.enabled" type="checkbox" />启用</label></td>
-          <td><button @click="saveUser(user)">保存</button></td>
+          <td data-label="账号"><div class="account-cell"><strong>{{ user.username }}</strong>
+            <small>{{ user.email || '未设置邮箱' }}</small></div></td>
+          <td data-label="名称">{{ user.displayName }}</td>
+          <td data-label="角色"><div class="role-checks"><label v-for="role in roles" :key="role.id" class="check">
+            <input v-model="user.roleIds" type="checkbox" :value="role.id" />{{ role.name }}</label></div></td>
+          <td data-label="状态"><label class="switch"><input v-model="user.enabled" type="checkbox" />启用</label></td>
+          <td data-label="操作"><button @click="saveUser(user)">保存</button></td>
         </tr></tbody></table>
     </div>
 
@@ -187,8 +188,8 @@ onMounted(loadAll)
 </template>
 
 <style scoped>
-.security-admin { max-width: 1180px; margin: auto; padding: 10px 24px 50px; }
-.admin-head { display: flex; align-items: center; justify-content: space-between; margin: 26px 0; }
+.security-admin { max-width: 1160px; margin: 0 auto; }
+.admin-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; padding: 24px 26px; border: 1px solid #dde6f1; border-radius: 18px; background: linear-gradient(120deg,#fff 62%,#eef5ff); box-shadow: 0 10px 30px #1e3a5f0b; }
 .admin-head h1 { margin: 8px 0 4px; font-size: 32px; }.admin-head p { margin: 0; color: #64748b; }
 .eyebrow { color: #2563eb; font-size: 11px; font-weight: 800; letter-spacing: .14em; }
 .tabs { display: flex; gap: 8px; margin-bottom: 18px; }.tabs button { background: #e8eef8; color: #475569; }
@@ -203,5 +204,26 @@ input,select { padding: 9px 10px; border: 1px solid #cbd5e1; border-radius: 8px;
 button { padding: 8px 12px; border: 0; border-radius: 8px; background: #2563eb; color: white; cursor: pointer; }.secondary { background: #e2e8f0; color: #475569; }
 .actions { display: flex; gap: 9px; }.danger { background: #fee2e2; color: #b42318; }.message,.loading { margin: 12px 0; padding: 12px; border-radius: 8px; }.error { background: #fee2e2; color: #b42318; }.ok { background: #dcfce7; color: #15803d; }
 table { width: 100%; border-collapse: collapse; } th,td { padding: 14px; border-bottom: 1px solid #e2e8f0; text-align: left; } th { background: #f8fafc; color: #64748b; font-size: 12px; }
-@media (max-width: 760px) { .split { grid-template-columns: 1fr; }.list { border-right: 0; border-bottom: 1px solid #e2e8f0; }.form-row { grid-template-columns: 1fr; }.panel { overflow-x: auto; } }
+@media (max-width: 760px) {
+  .admin-head { align-items: flex-start; gap: 15px; padding: 20px; }
+  .admin-head h1 { font-size: 26px; }
+  .split { grid-template-columns: 1fr; }
+  .list { border-right: 0; border-bottom: 1px solid #e2e8f0; }
+  .form-row { grid-template-columns: 1fr; }
+  .panel { border: 0; background: transparent; overflow: visible; }
+  table,tbody { display: block; }
+  thead { display: none; }
+  tbody { display: grid; gap: 12px; }
+  tr { display: grid; grid-template-columns: 1fr; padding: 10px 12px; border: 1px solid #e2e8f0;
+    border-radius: 14px; background: white; box-shadow: 0 6px 20px #1e3a5f0a; }
+  td { display: grid; grid-template-columns: 58px minmax(0,1fr); align-items: center; gap: 10px;
+    padding: 8px 4px; border-bottom: 1px dashed #e2e8f0; overflow-wrap: anywhere; }
+  td::before { content: attr(data-label); color: #94a3b8; font-size: 12px; font-weight: 700; }
+  td:last-child { border-bottom: 0; }
+  td:last-child button { width: 100%; }
+  .account-cell,.role-checks { min-width: 0; }
+  .role-checks { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .role-checks .check { margin: 0; white-space: nowrap; }
+  .switch { margin: 0; }
+}
 </style>

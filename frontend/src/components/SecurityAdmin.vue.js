@@ -136,10 +136,16 @@ let __VLS_directives;
 /** @type {__VLS_StyleScopedClasses['switch']} */ ;
 /** @type {__VLS_StyleScopedClasses['check']} */ ;
 /** @type {__VLS_StyleScopedClasses['check']} */ ;
+/** @type {__VLS_StyleScopedClasses['admin-head']} */ ;
+/** @type {__VLS_StyleScopedClasses['admin-head']} */ ;
 /** @type {__VLS_StyleScopedClasses['split']} */ ;
 /** @type {__VLS_StyleScopedClasses['list']} */ ;
 /** @type {__VLS_StyleScopedClasses['form-row']} */ ;
 /** @type {__VLS_StyleScopedClasses['panel']} */ ;
+/** @type {__VLS_StyleScopedClasses['role-checks']} */ ;
+/** @type {__VLS_StyleScopedClasses['role-checks']} */ ;
+/** @type {__VLS_StyleScopedClasses['check']} */ ;
+/** @type {__VLS_StyleScopedClasses['switch']} */ ;
 // CSS variable injection 
 // CSS variable injection end 
 __VLS_asFunctionalElement(__VLS_intrinsicElements.section, __VLS_intrinsicElements.section)({
@@ -205,14 +211,26 @@ else if (__VLS_ctx.tab === 'users') {
         __VLS_asFunctionalElement(__VLS_intrinsicElements.tr, __VLS_intrinsicElements.tr)({
             key: (user.id),
         });
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.td, __VLS_intrinsicElements.td)({});
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.td, __VLS_intrinsicElements.td)({
+            'data-label': "账号",
+        });
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+            ...{ class: "account-cell" },
+        });
         __VLS_asFunctionalElement(__VLS_intrinsicElements.strong, __VLS_intrinsicElements.strong)({});
         (user.username);
         __VLS_asFunctionalElement(__VLS_intrinsicElements.small, __VLS_intrinsicElements.small)({});
         (user.email || '未设置邮箱');
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.td, __VLS_intrinsicElements.td)({});
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.td, __VLS_intrinsicElements.td)({
+            'data-label': "名称",
+        });
         (user.displayName);
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.td, __VLS_intrinsicElements.td)({});
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.td, __VLS_intrinsicElements.td)({
+            'data-label': "角色",
+        });
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+            ...{ class: "role-checks" },
+        });
         for (const [role] of __VLS_getVForSourceType((__VLS_ctx.roles))) {
             __VLS_asFunctionalElement(__VLS_intrinsicElements.label, __VLS_intrinsicElements.label)({
                 key: (role.id),
@@ -225,7 +243,9 @@ else if (__VLS_ctx.tab === 'users') {
             (user.roleIds);
             (role.name);
         }
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.td, __VLS_intrinsicElements.td)({});
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.td, __VLS_intrinsicElements.td)({
+            'data-label': "状态",
+        });
         __VLS_asFunctionalElement(__VLS_intrinsicElements.label, __VLS_intrinsicElements.label)({
             ...{ class: "switch" },
         });
@@ -233,7 +253,9 @@ else if (__VLS_ctx.tab === 'users') {
             type: "checkbox",
         });
         (user.enabled);
-        __VLS_asFunctionalElement(__VLS_intrinsicElements.td, __VLS_intrinsicElements.td)({});
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.td, __VLS_intrinsicElements.td)({
+            'data-label': "操作",
+        });
         __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
             ...{ onClick: (...[$event]) => {
                     if (!!(__VLS_ctx.loading))
@@ -586,6 +608,8 @@ else {
 /** @type {__VLS_StyleScopedClasses['ok']} */ ;
 /** @type {__VLS_StyleScopedClasses['loading']} */ ;
 /** @type {__VLS_StyleScopedClasses['panel']} */ ;
+/** @type {__VLS_StyleScopedClasses['account-cell']} */ ;
+/** @type {__VLS_StyleScopedClasses['role-checks']} */ ;
 /** @type {__VLS_StyleScopedClasses['check']} */ ;
 /** @type {__VLS_StyleScopedClasses['switch']} */ ;
 /** @type {__VLS_StyleScopedClasses['split']} */ ;
