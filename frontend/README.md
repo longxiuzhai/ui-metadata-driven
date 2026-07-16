@@ -10,7 +10,9 @@ src/
 ├── components/          # 页面级通用组件
 │   └── cards/           # 卡片展示组件及白名单 registry.ts
 ├── forms/               # 动态表单的具体实现
-├── App.vue              # 应用外壳、页面元数据装配和卡片局部刷新
+├── views/               # 路由对应的业务视图及页面级状态
+├── styles/              # 应用外壳的全局样式
+├── App.vue              # 认证初始化、应用外壳和路由视图分发
 ├── api.ts               # HTTP 请求、页面元数据和卡片数据接口
 ├── auth.ts              # 登录状态、账号和权限菜单
 ├── formatters.ts        # 元数据可引用的字段格式化函数
@@ -20,8 +22,8 @@ src/
 
 ## 动态卡片链路
 
-1. `App.vue` 根据当前路由请求 `CardPageDefinition`。
-2. `App.vue` 遍历 `page.cards`，为每项元数据创建一个 `DynamicCard`。
+1. `App.vue` 根据当前路由选择业务视图。
+2. `views/MetadataCardPage.vue` 请求 `CardPageDefinition`，并为每项元数据创建一个 `DynamicCard`。
 3. `DynamicCard.vue` 根据 `loadStrategy` 立即加载或在接近视口时加载数据。
 4. `components/cards/registry.ts` 将元数据中的 `component` 名称映射到受信任的 Vue 组件。
 5. 展示组件接收 `data` 和元数据中的 `props`，只负责渲染。
