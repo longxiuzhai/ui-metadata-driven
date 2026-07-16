@@ -1,7 +1,0 @@
-package com.example.metadataui.customer.detail.web;
-import com.example.metadataui.card.model.CardPageDefinition; import com.example.metadataui.customer.detail.application.CustomerDetailCardService; import com.example.metadataui.customer.detail.spi.CustomerDetailContext; import org.springframework.web.bind.annotation.*; import java.util.*; import java.util.stream.*;
-@RestController @RequestMapping("/api/ui/customer-detail") public class CustomerDetailMetadataController {
- private final CustomerDetailCardService service; public CustomerDetailMetadataController(CustomerDetailCardService service){this.service=service;}
- @GetMapping("/cards") public CardPageDefinition cards(@RequestParam String customerId,@RequestHeader(name="X-Tenant-Id",defaultValue="demo")String tenant,@RequestHeader(name="X-User-Id",defaultValue="user-1")String user,@RequestHeader(name="X-Permissions",defaultValue="customer:read,customer:update,customer:tag:read,customer:trace:read")String permissions,@RequestHeader(name="X-Features",defaultValue="customerTags,customerBehaviorTrace")String features){return service.getCards(new CustomerDetailContext(tenant,user,customerId,split(permissions),split(features).stream().collect(Collectors.toMap(x->x,x->true))));}
- private Set<String> split(String s){if(s==null||s.trim().isEmpty())return Collections.emptySet();return Arrays.stream(s.split(",")).map(String::trim).filter(x->!x.isEmpty()).collect(Collectors.toSet());}
-}

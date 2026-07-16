@@ -1,7 +1,9 @@
 import { formatters } from '../../formatters';
 const props = defineProps();
-const show = (field) => field.formatter && formatters[field.formatter]
-    ? formatters[field.formatter](props.data[field.key]) : String(props.data[field.key] ?? '-');
+function show(field) {
+    const formatter = field.formatter ? formatters[field.formatter] : undefined;
+    return formatter ? formatter(props.data[field.key]) : String(props.data[field.key] ?? '-');
+}
 debugger; /* PartiallyEnd: #3632/scriptSetup.vue */
 const __VLS_ctx = {};
 let __VLS_components;

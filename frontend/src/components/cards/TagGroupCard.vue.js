@@ -12,7 +12,10 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.d
 for (const [item, index] of __VLS_getVForSourceType((__VLS_ctx.data))) {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
         key: (index),
-        ...{ style: ({ borderColor: item[__VLS_ctx.colorField ?? 'color'], color: item[__VLS_ctx.colorField ?? 'color'] }) },
+        ...{ style: ({
+                borderColor: item[__VLS_ctx.colorField ?? 'color'],
+                color: item[__VLS_ctx.colorField ?? 'color']
+            }) },
     });
     (item[__VLS_ctx.labelField ?? 'name']);
 }

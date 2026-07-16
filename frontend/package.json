@@ -3,8 +3,21 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "scripts": { "dev": "vite", "build": "vue-tsc -b && vite build", "test": "vitest run" },
-  "dependencies": { "@vitejs/plugin-vue": "latest", "vite": "latest", "vue": "^3.5.0" },
-  "devDependencies": { "@vue/test-utils": "^2.4.6", "jsdom": "^26.0.0", "typescript": "~5.8.0", "vitest": "^3.0.0", "vue-tsc": "^2.2.0" }
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "latest",
+    "vite": "latest",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@vue/test-utils": "^2.4.6",
+    "jsdom": "^26.0.0",
+    "typescript": "~5.8.0",
+    "vitest": "^3.0.0",
+    "vue-tsc": "^2.2.0"
+  }
 }
-

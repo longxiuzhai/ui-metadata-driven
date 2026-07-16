@@ -1,2 +1,37 @@
 package com.example.metadataui.card.model;
-public final class CardAction { private final String code,label,type,target,permission; public CardAction(String code,String label,String type,String target,String permission){this.code=code;this.label=label;this.type=type;this.target=target;this.permission=permission;} public String getCode(){return code;} public String getLabel(){return label;} public String getType(){return type;} public String getTarget(){return target;} public String getPermission(){return permission;} }
+
+public final class CardAction {
+    private final String code;
+    private final String label;
+    private final String type;
+    private final String target;
+    private final String permission;
+
+    public CardAction(String code, String label, String type, String target, String permission) {
+        this.code = code;
+        this.label = label;
+        this.type = type;
+        this.target = target;
+        this.permission = permission;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public String getPermission() {
+        return permission;
+    }
+}

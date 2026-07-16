@@ -118,23 +118,26 @@
 ### 4.1 接口
 
 ```java
-public interface CustomerDetailCardProvider {
+public interface CardProvider {
+
+    String pageCode();
 
     String cardCode();
 
-    boolean supports(CardContext context);
+    boolean supports(CardRequestContext context);
 
-    CardDefinition definition(CardContext context);
+    CardDefinition definition(CardRequestContext context);
 }
 ```
 
 ```java
-public record CardContext(
+public record CardRequestContext(
+    String pageCode,
     String tenantId,
     String userId,
-    String customerId,
     Set<String> permissions,
-    Map<String, Object> featureFlags
+    Map<String, Object> featureFlags,
+    Map<String, String> parameters
 ) {}
 ```
 
@@ -163,7 +166,12 @@ public record CardDefinition(
 @Component
 @ConditionalOnClass(BehaviorTraceService.class)
 public class BehaviorTraceCardProvider
-        implements CustomerDetailCardProvider {
+        implements CardProvider {
+
+    @Override
+    public String pageCode() {
+        return "customer_detail";
+    }
 
     @Override
     public String cardCode() {
@@ -171,14 +179,14 @@ public class BehaviorTraceCardProvider
     }
 
     @Override
-    public boolean supports(CardContext context) {
+    public boolean supports(CardRequestContext context) {
         return context.permissions().contains("customer:trace:read")
             && Boolean.TRUE.equals(
                 context.featureFlags().get("customerBehaviorTrace"));
     }
 
     @Override
-    public CardDefinition definition(CardContext context) {
+    public CardDefinition definition(CardRequestContext context) {
         return new CardDefinition(
             "behavior_trace",
             "行为轨迹",

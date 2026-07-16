@@ -13,46 +13,60 @@ const resolvedComponent = computed(() => cardRegistry[props.definition.component
 const isUnknown = computed(() => !cardRegistry[props.definition.component]);
 const isEmpty = computed(() => data.value == null || (Array.isArray(data.value) && data.value.length === 0));
 async function load() {
-    if (loading.value)
+    if (loading.value) {
         return;
+    }
     controller?.abort();
     controller = new AbortController();
     loading.value = true;
     error.value = '';
     const started = performance.now();
     try {
-        data.value = await loadCardData(props.definition.dataApi, props.customerId, controller.signal);
+        data.value = await loadCardData(props.definition.dataApi, props.context, controller.signal);
     }
-    catch (e) {
-        if (e.name !== 'AbortError')
-            error.value = e.message;
+    catch (reason) {
+        if (reason.name !== 'AbortError') {
+            error.value = reason.message;
+        }
     }
     finally {
         loading.value = false;
-        console.info('card_load', { card: props.definition.code, durationMs: Math.round(performance.now() - started), ok: !error.value });
+        console.info('card_load', {
+            card: props.definition.code,
+            durationMs: Math.round(performance.now() - started),
+            ok: !error.value
+        });
     }
 }
 function handleAction(action) {
-    if (action.type === 'refresh')
+    if (action.type === 'refresh') {
         return load();
-    if (action.type === 'navigate' && action.target)
+    }
+    if (action.type === 'navigate' && action.target) {
         window.location.assign(action.target);
-    if (action.type === 'open-form')
+    }
+    if (action.type === 'open-form') {
         window.alert(`打开已登记表单：${action.target}`);
+    }
 }
 onMounted(() => {
-    if (props.definition.loadStrategy === 'eager')
+    if (props.definition.loadStrategy === 'eager') {
         return load();
+    }
     observer = new IntersectionObserver(entries => {
         if (entries.some(entry => entry.isIntersecting)) {
             observer?.disconnect();
             load();
         }
     }, { rootMargin: '120px' });
-    if (root.value)
+    if (root.value) {
         observer.observe(root.value);
+    }
 });
-onBeforeUnmount(() => { observer?.disconnect(); controller?.abort(); });
+onBeforeUnmount(() => {
+    observer?.disconnect();
+    controller?.abort();
+});
 debugger; /* PartiallyEnd: #3632/scriptSetup.vue */
 const __VLS_ctx = {};
 let __VLS_components;

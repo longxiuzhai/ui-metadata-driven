@@ -1,1 +1,0 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","required":["version","pageCode","layout","cards"],"properties":{"version":{"const":"1.0"},"pageCode":{"const":"customer_detail"},"cards":{"type":"array","maxItems":20}}}
