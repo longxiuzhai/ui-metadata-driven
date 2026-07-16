@@ -47,7 +47,7 @@ npm run dev
 - 首页：<http://localhost:5173/>
 - 客户详情：<http://localhost:5173/customer-detail?customerId=1001>
 
-Vite 将 `/api` 代理到 `http://localhost:8080`。账号、角色、权限和菜单保存在 MySQL；原有客户卡片数据仍是内存演示数据。
+Vite 将 `/api` 代理到 `http://localhost:8080`。账号、角色、权限、菜单，以及客户、标签、轨迹、订单和会员演示数据均保存在 MySQL。
 
 ## 项目结构
 
