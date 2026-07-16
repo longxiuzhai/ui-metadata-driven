@@ -1,8 +1,9 @@
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { loadCardData } from '../api';
 import { cardRegistry } from '../cardRegistry';
 import UnknownCard from './cards/UnknownCard.vue';
 const props = defineProps();
+const emit = defineEmits();
 const root = useTemplateRef('root');
 const data = ref(null);
 const loading = ref(false);
@@ -38,17 +39,6 @@ async function load() {
         });
     }
 }
-function handleAction(action) {
-    if (action.type === 'refresh') {
-        return load();
-    }
-    if (action.type === 'navigate' && action.target) {
-        window.location.assign(action.target);
-    }
-    if (action.type === 'open-form') {
-        window.alert(`打开已登记表单：${action.target}`);
-    }
-}
 onMounted(() => {
     if (props.definition.loadStrategy === 'eager') {
         return load();
@@ -66,6 +56,10 @@ onMounted(() => {
 onBeforeUnmount(() => {
     observer?.disconnect();
     controller?.abort();
+});
+watch(() => props.refreshToken, (next, previous) => {
+    if (previous !== undefined && next !== previous)
+        load();
 });
 debugger; /* PartiallyEnd: #3632/scriptSetup.vue */
 const __VLS_ctx = {};
@@ -88,7 +82,7 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.d
 for (const [action] of __VLS_getVForSourceType((__VLS_ctx.definition.actions))) {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
         ...{ onClick: (...[$event]) => {
-                __VLS_ctx.handleAction(action);
+                __VLS_ctx.emit('action', action, __VLS_ctx.data);
             } },
         key: (action.code),
     });
@@ -146,6 +140,7 @@ var __VLS_dollars;
 const __VLS_self = (await import('vue')).defineComponent({
     setup() {
         return {
+            emit: emit,
             root: root,
             data: data,
             loading: loading,
@@ -154,15 +149,16 @@ const __VLS_self = (await import('vue')).defineComponent({
             isUnknown: isUnknown,
             isEmpty: isEmpty,
             load: load,
-            handleAction: handleAction,
         };
     },
+    __typeEmits: {},
     __typeProps: {},
 });
 export default (await import('vue')).defineComponent({
     setup() {
         return {};
     },
+    __typeEmits: {},
     __typeProps: {},
 });
 ; /* PartiallyEnd: #4569/main.vue */

@@ -1,4 +1,4 @@
-package com.example.metadataui.account;
+package com.example.account;
 
 import org.springframework.stereotype.Service;
 
@@ -8,7 +8,7 @@ import java.util.Set;
 public class AccountService {
     private static final Set<String> DEMO_PERMISSIONS = Set.of(
             "home:read", "home:activity:read", "customer:read", "customer:update",
-            "customer:tag:read", "customer:trace:read");
+            "customer:tag:read", "customer:trace:read", "order:read");
     private static final Set<String> DEMO_FEATURES = Set.of(
             "homeActivity", "customerTags", "customerBehaviorTrace");
 

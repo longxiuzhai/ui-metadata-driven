@@ -22,7 +22,12 @@ class CustomerDetailControllerTest {
     void discoversTenantProvidersThroughUnifiedEndpoint() throws Exception {
         mvc.perform(get("/api/ui/pages/customer_detail/cards").param("customerId", "1001"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cards[*].code", contains("basic_info", "friend_tags", "behavior_trace")));
+                .andExpect(jsonPath("$.cards[*].code", contains("basic_info", "friend_tags", "behavior_trace")))
+                .andExpect(jsonPath("$.cards[0].actions[0].target.formCode")
+                        .value("customer_basic_edit"))
+                .andExpect(jsonPath("$.cards[0].actions[1].target.routeCode").value("order_list"))
+                .andExpect(jsonPath("$.cards[0].actions[1].params.customerId.source")
+                        .value("page-context"));
     }
 
     @Test

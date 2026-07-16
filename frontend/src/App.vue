@@ -1,39 +1,81 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { createActionRuntime } from './actions/ActionRuntime'
 import { getCustomerDetailCards, getHomeCards } from './api'
 import DynamicCard from './components/DynamicCard.vue'
-import type { CardPageDefinition } from './types'
+import FormDrawer from './components/FormDrawer.vue'
+import type { ActionResult, CardAction, CardPageDefinition, OpenFormRequest } from './types'
 
-type PageKind = 'home' | 'customer'
+type PageKind = 'home' | 'customer' | 'orders'
 
-const params = new URLSearchParams(location.search)
-const initialPage: PageKind =
-  location.pathname.includes('customer-detail') || params.get('page') === 'customer'
-    ? 'customer'
-    : 'home'
-const activePage = ref<PageKind>(initialPage)
-const customerId = ref(params.get('customerId') ?? '1001')
+const route = useRoute()
+const router = useRouter()
 const userId = ref('user-1')
 const page = ref<CardPageDefinition | null>(null)
 const error = ref('')
 const loading = ref(true)
+const refreshTokens = ref<Record<string, number>>({})
+const formOpen = ref(false)
+const formRequest = ref<OpenFormRequest | null>(null)
+const toast = ref('')
+let toastTimer: ReturnType<typeof setTimeout> | undefined
+
+const activePage = computed<PageKind>(() => {
+  if (route.name === 'customer-detail') return 'customer'
+  if (route.name === 'order-list') return 'orders'
+  return 'home'
+})
+const customerId = computed(() => String(route.query.customerId ?? '1001'))
+const pageCode = computed(() => (activePage.value === 'customer' ? 'customer_detail' : 'home'))
 
 const pageContext = computed<Record<string, string>>(() =>
   activePage.value === 'customer'
     ? Object.fromEntries([['customerId', customerId.value]])
-    : Object.fromEntries([['userId', userId.value]])
+    : activePage.value === 'orders'
+      ? Object.fromEntries(
+          Object.entries(route.query).map(([key, value]) => [key, String(value ?? '')])
+        )
+      : Object.fromEntries([['userId', userId.value]])
 )
-const heading = computed(() => (activePage.value === 'customer' ? '客户详情' : '工作首页'))
-const subtitle = computed(() =>
-  activePage.value === 'customer'
-    ? `客户编号 ${customerId.value} · 卡片由后端能力、租户与权限动态决定`
-    : '面向当前用户动态装配工作摘要与业务插件卡片'
-)
+const heading = computed(() => {
+  if (activePage.value === 'customer') return '客户详情'
+  if (activePage.value === 'orders') return '客户订单'
+  return '工作首页'
+})
+const subtitle = computed(() => {
+  if (activePage.value === 'customer') {
+    return `客户编号 ${customerId.value} · 卡片由后端能力、租户与权限动态决定`
+  }
+  if (activePage.value === 'orders') {
+    return `客户 ${pageContext.value.customerId ?? '-'} · 状态 ${pageContext.value.status ?? '全部'}`
+  }
+  return '面向当前用户动态装配工作摘要与业务插件卡片'
+})
 const avatar = computed(() =>
-  activePage.value === 'customer' ? customerId.value.slice(-2) : 'HI'
+  activePage.value === 'customer'
+    ? customerId.value.slice(-2)
+    : activePage.value === 'orders'
+      ? 'OR'
+      : 'HI'
 )
 
+const executeCardAction = createActionRuntime(router, {
+  refreshCards,
+  openForm(request) {
+    formRequest.value = request
+    formOpen.value = true
+  },
+  notify
+})
+
 async function loadPage() {
+  if (activePage.value === 'orders') {
+    page.value = null
+    error.value = ''
+    loading.value = false
+    return
+  }
   loading.value = true
   error.value = ''
   page.value = null
@@ -50,21 +92,44 @@ async function loadPage() {
   }
 }
 
-function switchPage(kind: PageKind) {
+function switchPage(kind: 'home' | 'customer') {
   if (activePage.value === kind) {
     return
   }
-
-  activePage.value = kind
-  const url =
+  router.push(
     kind === 'customer'
-      ? `/customer-detail?customerId=${encodeURIComponent(customerId.value)}`
-      : '/'
-  history.pushState({}, '', url)
-  loadPage()
+      ? { name: 'customer-detail', query: { customerId: customerId.value } }
+      : { name: 'home' }
+  )
 }
 
-onMounted(loadPage)
+function refreshCards(cardCodes: string[]) {
+  for (const cardCode of cardCodes) {
+    refreshTokens.value[cardCode] = (refreshTokens.value[cardCode] ?? 0) + 1
+  }
+}
+
+function notify(message: string) {
+  toast.value = message
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => (toast.value = ''), 3000)
+}
+
+function handleCardAction(action: CardAction, cardData: unknown, cardCode: string) {
+  executeCardAction(action, {
+    pageCode: pageCode.value,
+    cardCode,
+    pageContext: pageContext.value,
+    cardData
+  })
+}
+
+function handleFormSaved(result: ActionResult) {
+  refreshCards(result.refreshCards)
+  notify(result.message)
+}
+
+watch(() => route.fullPath, loadPage, { immediate: true })
 </script>
 
 <template>
@@ -101,11 +166,22 @@ onMounted(loadPage)
         :key="card.code"
         :definition="card"
         :context="pageContext"
+        :refresh-token="refreshTokens[card.code] ?? 0"
         :style="{ '--xs': card.span.xs, '--md': card.span.md, '--xl': card.span.xl }"
+        @action="(action, data) => handleCardAction(action, data, card.code)"
       />
       <div v-if="page.cards.length === 0" class="page-state empty">当前没有可用卡片</div>
     </section>
+    <section v-else-if="activePage === 'orders'" class="orders-placeholder">
+      <h2>动态参数跳转成功</h2>
+      <p>当前页面从卡片动作接收到以下查询参数：</p>
+      <pre>{{ JSON.stringify(pageContext, null, 2) }}</pre>
+      <button @click="switchPage('customer')">返回客户详情</button>
+    </section>
   </main>
+
+  <FormDrawer v-model="formOpen" :request="formRequest" @saved="handleFormSaved" />
+  <div v-if="toast" class="toast">{{ toast }}</div>
 </template>
 
 <style>
@@ -221,6 +297,47 @@ nav button.active {
 
 .page-state.empty {
   grid-column: 1 / -1;
+}
+
+.orders-placeholder {
+  padding: 32px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 7px 22px rgba(25, 43, 70, 0.055);
+}
+
+.orders-placeholder h2 {
+  margin-top: 0;
+}
+
+.orders-placeholder pre {
+  overflow: auto;
+  padding: 16px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.orders-placeholder button {
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+.toast {
+  position: fixed;
+  z-index: 1100;
+  right: 24px;
+  bottom: 24px;
+  padding: 12px 18px;
+  border-radius: 9px;
+  background: #172033;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.2);
+  color: #fff;
 }
 
 @media (max-width: 900px) {

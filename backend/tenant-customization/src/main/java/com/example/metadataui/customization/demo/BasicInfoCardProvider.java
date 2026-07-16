@@ -2,9 +2,12 @@ package com.example.metadataui.customization.demo;
 
 import com.example.metadataui.card.condition.CardConditional;
 import com.example.metadataui.card.context.CardRequestContext;
+import com.example.metadataui.card.model.ActionSuccess;
+import com.example.metadataui.card.model.ActionTarget;
 import com.example.metadataui.card.model.CardAction;
 import com.example.metadataui.card.model.CardDefinition;
 import com.example.metadataui.card.model.ResponsiveSpan;
+import com.example.metadataui.card.model.ParameterBinding;
 import com.example.metadataui.card.spi.CardProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -39,6 +42,20 @@ public class BasicInfoCardProvider implements CardProvider {
                         Map.of("key", "name", "label", "姓名"),
                         Map.of("key", "mobile", "label", "手机号", "formatter", "mobile-mask"),
                         Map.of("key", "status", "label", "状态", "formatter", "customer-status"))),
-                List.of(new CardAction("edit", "编辑", "open-form", "customer_basic_edit", "customer:update")));
+                List.of(
+                        new CardAction(
+                                "edit", "编辑", "open-form",
+                                ActionTarget.form("customer_basic_edit", "customer.basic.update", "drawer"),
+                                "customer:update",
+                                Map.of("customerId", ParameterBinding.pageContext("customerId")),
+                                new ActionSuccess("客户信息已保存", true, List.of("basic_info"))),
+                        new CardAction(
+                                "orders", "查看订单", "navigate",
+                                ActionTarget.route("order_list"),
+                                "order:read",
+                                Map.of(
+                                        "customerId", ParameterBinding.pageContext("customerId"),
+                                        "status", ParameterBinding.literal("OPEN")),
+                                null)));
     }
 }

@@ -1,4 +1,4 @@
-package com.example.metadataui.account;
+package com.example.account;
 
 import java.util.Collections;
 import java.util.HashSet;

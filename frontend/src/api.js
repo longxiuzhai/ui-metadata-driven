@@ -28,3 +28,25 @@ export async function loadCardData(urlTemplate, context, signal) {
     }
     return response.json();
 }
+async function postAction(url, body) {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        throw new Error(errorBody.message ?? `动作执行失败 (${response.status})`);
+    }
+    return response.json();
+}
+export function prepareAction(actionCode, pageCode, cardCode, params) {
+    return postAction(`/api/ui/actions/${encodeURIComponent(actionCode)}/prepare`, {
+        pageCode,
+        cardCode,
+        params
+    });
+}
+export function executeAction(actionCode, request) {
+    return postAction(`/api/ui/actions/${encodeURIComponent(actionCode)}/execute`, request);
+}

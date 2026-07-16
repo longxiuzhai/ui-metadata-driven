@@ -1,7 +1,7 @@
 package com.example.metadataui.security;
 
-import com.example.metadataui.account.AccountIdentity;
-import com.example.metadataui.account.AccountService;
+import com.example.account.AccountIdentity;
+import com.example.account.AccountService;
 import com.example.metadataui.card.context.CardRequestContext;
 import org.springframework.stereotype.Component;
 

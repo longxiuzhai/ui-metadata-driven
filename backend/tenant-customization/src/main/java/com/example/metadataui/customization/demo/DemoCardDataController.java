@@ -9,9 +9,15 @@ import java.util.Map;
 
 @RestController
 public class DemoCardDataController {
+    private final DemoCustomerRepository customerRepository;
+
+    public DemoCardDataController(DemoCustomerRepository customerRepository) {
+        this.customerRepository = customerRepository;
+    }
+
     @GetMapping("/api/customers/{id}/basic")
     public Map<String, Object> basic(@PathVariable String id) {
-        return Map.of("name", "示例客户 " + id, "mobile", "13800138000", "status", "ACTIVE");
+        return customerRepository.get(id).values();
     }
 
     @GetMapping("/api/customers/{id}/tags")

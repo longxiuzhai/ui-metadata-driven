@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { loadCardData } from '../api'
 import { cardRegistry } from '../cardRegistry'
 import type { CardAction, CardDefinition } from '../types'
@@ -8,7 +8,9 @@ import UnknownCard from './cards/UnknownCard.vue'
 const props = defineProps<{
   definition: CardDefinition
   context: Record<string, string>
+  refreshToken?: number
 }>()
+const emit = defineEmits<{ action: [action: CardAction, cardData: unknown] }>()
 
 const root = useTemplateRef<HTMLElement>('root')
 const data = ref<unknown>(null)
@@ -52,18 +54,6 @@ async function load() {
   }
 }
 
-function handleAction(action: CardAction) {
-  if (action.type === 'refresh') {
-    return load()
-  }
-  if (action.type === 'navigate' && action.target) {
-    window.location.assign(action.target)
-  }
-  if (action.type === 'open-form') {
-    window.alert(`打开已登记表单：${action.target}`)
-  }
-}
-
 onMounted(() => {
   if (props.definition.loadStrategy === 'eager') {
     return load()
@@ -87,6 +77,13 @@ onBeforeUnmount(() => {
   observer?.disconnect()
   controller?.abort()
 })
+
+watch(
+  () => props.refreshToken,
+  (next, previous) => {
+    if (previous !== undefined && next !== previous) load()
+  }
+)
 </script>
 
 <template>
@@ -97,7 +94,7 @@ onBeforeUnmount(() => {
         <button
           v-for="action in definition.actions"
           :key="action.code"
-          @click="handleAction(action)"
+          @click="emit('action', action, data)"
         >
           {{ action.label }}
         </button>

@@ -39,6 +39,6 @@ public class WorkSummaryCardProvider implements CardProvider {
                         Map.of("key", "pending", "label", "待处理"),
                         Map.of("key", "followUps", "label", "待跟进"),
                         Map.of("key", "completed", "label", "今日完成"))),
-                List.of(new CardAction("refresh", "刷新", "refresh", null, "home:read")));
+                List.of(CardAction.refresh("refresh", "刷新", "home:read")));
     }
 }

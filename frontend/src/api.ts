@@ -1,4 +1,4 @@
-import type { CardPageDefinition } from './types'
+import type { ActionPreparation, ActionResult, CardPageDefinition } from './types'
 
 async function getCardPage(url: string, pageCode: string): Promise<CardPageDefinition> {
   const response = await fetch(url)
@@ -37,4 +37,44 @@ export async function loadCardData(urlTemplate: string, context: Record<string, 
     throw new Error(`数据加载失败 (${response.status})`)
   }
   return response.json()
+}
+
+async function postAction<T>(url: string, body: unknown): Promise<T> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}))
+    throw new Error(errorBody.message ?? `动作执行失败 (${response.status})`)
+  }
+  return response.json()
+}
+
+export function prepareAction(
+  actionCode: string,
+  pageCode: string,
+  cardCode: string,
+  params: Record<string, string>
+): Promise<ActionPreparation> {
+  return postAction(`/api/ui/actions/${encodeURIComponent(actionCode)}/prepare`, {
+    pageCode,
+    cardCode,
+    params
+  })
+}
+
+export function executeAction(
+  actionCode: string,
+  request: {
+    pageCode: string
+    cardCode: string
+    params: Record<string, string>
+    values: Record<string, unknown>
+    version: number
+    requestId: string
+  }
+): Promise<ActionResult> {
+  return postAction(`/api/ui/actions/${encodeURIComponent(actionCode)}/execute`, request)
 }
