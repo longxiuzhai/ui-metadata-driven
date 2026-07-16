@@ -26,6 +26,7 @@ const userId = computed(() => authState.account?.userId ?? '')
 const page = ref<CardPageDefinition | null>(null)
 const error = ref('')
 const loading = ref(true)
+// key 为卡片 code。动作完成后只递增受影响卡片的 token，实现局部刷新。
 const refreshTokens = ref<Record<string, number>>({})
 const formOpen = ref(false)
 const formRequest = ref<OpenFormRequest | null>(null)
@@ -74,6 +75,7 @@ const executeCardAction = createActionRuntime(router, {
 })
 
 async function loadPage() {
+  // App 只获取页面级元数据；每张卡片的数据由 DynamicCard 按加载策略独立请求。
   if (!authState.account || isAuthRoute.value || isSecurityAdmin.value) {
     page.value = null
     loading.value = false
@@ -138,6 +140,7 @@ function notify(message: string) {
 }
 
 function handleCardAction(action: CardAction, cardData: unknown, cardCode: string) {
+  // 将声明式动作交给运行时处理，页面只提供当前上下文和卡片数据。
   executeCardAction(action, {
     pageCode: pageCode.value,
     cardCode,
@@ -226,6 +229,10 @@ watch(() => route.fullPath, async () => {
             <button @click="loadPage">重试</button>
           </div>
           <section v-else-if="page" class="grid" :style="{ '--gap': `${page.layout.gap}px` }">
+            <!--
+              后端返回的每项 CardDefinition 在这里装配成 DynamicCard：
+              component 决定展示组件，span 决定响应式宽度，actions 决定可用操作。
+            -->
             <DynamicCard
               v-for="card in page.cards"
               :key="card.code"

@@ -20,6 +20,7 @@ export async function apiRequest<T>(url: string, init: RequestInit = {}): Promis
 
 async function getCardPage(url: string, pageCode: string): Promise<CardPageDefinition> {
   const value = await apiRequest<CardPageDefinition>(url)
+  // 页面元数据是动态渲染的输入，先做最小协议校验，避免错误配置进入组件层。
   if (value.version !== '1.0' || value.pageCode !== pageCode || !Array.isArray(value.cards)) {
     throw new Error('不支持的元数据协议')
   }
@@ -38,6 +39,8 @@ export async function getHomeCards(): Promise<CardPageDefinition> {
 }
 
 export async function loadCardData(urlTemplate: string, context: Record<string, string>, signal: AbortSignal) {
+  // dataApi 由后端元数据提供，例如 /api/customers/{customerId}/summary。
+  // 页面上下文只负责替换占位符；卡片组件不会感知路由或业务查询参数。
   const url = Object.entries(context).reduce(
     (value, [key, replacement]) => value.replaceAll(`{${key}}`, encodeURIComponent(replacement)),
     urlTemplate
@@ -46,6 +49,7 @@ export async function loadCardData(urlTemplate: string, context: Record<string, 
     throw new Error('卡片数据源缺少页面上下文')
   }
   if (!url.startsWith('/api/')) {
+    // 元数据不能把浏览器引向任意外部地址，数据请求统一限制在本站 API 下。
     throw new Error('拒绝访问非站内数据源')
   }
   return apiRequest(url, { signal })

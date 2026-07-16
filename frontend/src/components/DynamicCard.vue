@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { loadCardData } from '../api'
-import { cardRegistry } from '../cardRegistry'
+import { cardRegistry } from './cards/registry'
 import type { CardAction, CardDefinition } from '../types'
 import UnknownCard from './cards/UnknownCard.vue'
 
@@ -12,6 +12,8 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ action: [action: CardAction, cardData: unknown] }>()
 
+// DynamicCard 是元数据与具体展示组件之间的适配层：
+// 它负责数据加载、状态切换和动作转发，具体卡片只关心如何展示 data。
 const root = useTemplateRef<HTMLElement>('root')
 const data = ref<unknown>(null)
 const loading = ref(false)
@@ -28,6 +30,7 @@ const isEmpty = computed(
 )
 
 async function load() {
+  // 同一卡片只允许一个有效请求。刷新或卸载时取消旧请求，避免旧响应覆盖新数据。
   if (loading.value) {
     return
   }
@@ -59,6 +62,7 @@ onMounted(() => {
     return load()
   }
 
+  // on-visible 卡片接近视口 120px 时预加载，兼顾首屏速度和滚动体验。
   observer = new IntersectionObserver(
     entries => {
       if (entries.some(entry => entry.isIntersecting)) {
@@ -81,6 +85,7 @@ onBeforeUnmount(() => {
 watch(
   () => props.refreshToken,
   (next, previous) => {
+    // 父页面递增 token 即可触发指定卡片刷新，无需让动作运行时持有组件实例。
     if (previous !== undefined && next !== previous) load()
   }
 )
