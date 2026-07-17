@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@MapperScan({"com.example.rbac.mapper", "com.example.metadataui.customization.demo.mapper"})
+@MapperScan({"com.example.rbac.mapper"})
 public class MetadataUiApplication {
 
     public static void main(String[] args) {
