@@ -2,6 +2,7 @@ package com.example.metadataui.customization.demo;
 
 import com.example.metadataui.action.model.ActionCommand;
 import com.example.metadataui.action.model.ActionContext;
+import com.example.metadataui.action.model.ActionPreparation;
 import com.example.metadataui.action.model.ActionResult;
 import com.example.metadataui.action.spi.UiActionHandler;
 import com.example.metadataui.card.condition.CardConditional;
@@ -14,14 +15,22 @@ import com.example.metadataui.card.model.ResponsiveSpan;
 import com.example.metadataui.card.spi.CardProvider;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @CardConditional(permissions = "order:read")
 public class OrderListCardProvider implements CardProvider, UiActionHandler {
+    private static final String FORM_CODE = "order_list_edit";
+    private static final String CREATE_ACTION_CODE = "order.create";
+    private static final String UPDATE_ACTION_CODE = "order.list.update";
     private static final String DELETE_ACTION_CODE = "order.delete";
+    private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private final DemoCustomerRepository repository;
     private final Map<String, ActionResult> completedRequests = new ConcurrentHashMap<>();
@@ -43,10 +52,17 @@ public class OrderListCardProvider implements CardProvider, UiActionHandler {
     public CardDefinition definition(CardRequestContext context) {
         String customerId = context.parameter("customerId");
         boolean customerOrders = customerId != null && !customerId.isBlank();
-        CardAction openCustomer = new CardAction(
-                "open_customer", "查看客户", "navigate",
+        CardAction viewOrder = new CardAction(
+                "view_order", "查看", "navigate",
                 ActionTarget.route("customer_detail"), "customer:read",
                 Map.of("customerId", ParameterBinding.cardData("customerId")), null);
+        CardAction createOrder = new CardAction(
+                "create_order", "新增", "open-form",
+                ActionTarget.form(FORM_CODE, CREATE_ACTION_CODE, "drawer"), "order:update", Map.of(), null);
+        CardAction editOrder = new CardAction(
+                "edit_order", "修改", "open-form",
+                ActionTarget.form(FORM_CODE, UPDATE_ACTION_CODE, "drawer"), "order:update",
+                Map.of("orderNo", ParameterBinding.cardData("orderNo")), null);
         CardAction deleteOrder = new CardAction(
                 "delete_order", "删除", "execute",
                 ActionTarget.action(DELETE_ACTION_CODE), "order:update",
@@ -58,13 +74,13 @@ public class OrderListCardProvider implements CardProvider, UiActionHandler {
                 "eager", "order:read",
                 Map.of(
                         "rowKey", "orderNo",
-                        "rowActionCode", "open_customer",
-                        "rowActionCodes", List.of("delete_order"),
+                        "tableActionCodes", List.of("create_order"),
+                        "rowActionCodes", List.of("view_order", "edit_order", "delete_order"),
                         "rowActionConfirmations", Map.of("delete_order", "确认删除该订单吗？"),
                         "summaryLabel", "笔订单",
                         "minTableWidth", 1600,
                         "columns", List.of(
-                                Map.of("key", "orderNo", "label", "订单号", "width", 150),
+                                Map.of("key", "orderNo", "label", "订单号", "width", 150, "fixed", "left"),
                                 Map.of("key", "customerId", "label", "客户ID", "width", 90),
                                 Map.of("key", "memberId", "label", "会员ID", "width", 100),
                                 Map.of("key", "memberUnionId", "label", "会员UnionID", "width", 180),
@@ -76,12 +92,12 @@ public class OrderListCardProvider implements CardProvider, UiActionHandler {
                                 Map.of("key", "placedAt", "label", "下单时间", "width", 150),
                                 Map.of("key", "createdAt", "label", "创建时间", "width", 150),
                                 Map.of("key", "updatedAt", "label", "更新时间", "width", 150))),
-                List.of(openCustomer, deleteOrder));
+                List.of(createOrder, viewOrder, editOrder, deleteOrder));
     }
 
     @Override
-    public String actionCode() {
-        return DELETE_ACTION_CODE;
+    public Set<String> actionCodes() {
+        return Set.of(CREATE_ACTION_CODE, UPDATE_ACTION_CODE, DELETE_ACTION_CODE);
     }
 
     @Override
@@ -95,13 +111,52 @@ public class OrderListCardProvider implements CardProvider, UiActionHandler {
     }
 
     @Override
+    public ActionPreparation prepare(ActionContext context) {
+        if (CREATE_ACTION_CODE.equals(context.getActionCode())) {
+            return new ActionPreparation(FORM_CODE,
+                    Map.of("orderStatus", "OPEN", "placedAt", DATE_TIME.format(LocalDateTime.now())), 0);
+        }
+        return new ActionPreparation(FORM_CODE, repository.order(context.requiredParam("orderNo")), 0);
+    }
+
+    @Override
     public ActionResult execute(ActionContext context, ActionCommand command) {
         String key = context.getTenantId() + ":" + context.getUserId() + ":" + command.getRequestId();
         ActionResult completed = completedRequests.get(key);
         if (completed != null) return completed;
-        repository.deleteOrder(context.requiredParam("orderNo"));
-        ActionResult result = new ActionResult("订单已删除", List.of(cardCode()));
+        ActionResult result;
+        if (DELETE_ACTION_CODE.equals(context.getActionCode())) {
+            repository.deleteOrder(context.requiredParam("orderNo"));
+            result = new ActionResult("订单已删除", List.of(cardCode()));
+        } else {
+            String customerId = required(command, "customerId");
+            String memberId = optional(command, "memberId");
+            BigDecimal amount = new BigDecimal(required(command, "orderAmount"));
+            String status = required(command, "orderStatus");
+            if (!List.of("OPEN", "PAID", "CLOSED").contains(status)) {
+                throw new IllegalArgumentException("orderStatus must be OPEN, PAID or CLOSED");
+            }
+            LocalDateTime placedAt = LocalDateTime.parse(required(command, "placedAt"), DATE_TIME);
+            if (CREATE_ACTION_CODE.equals(context.getActionCode())) {
+                repository.createOrder(required(command, "orderNo"), customerId, memberId, amount, status, placedAt);
+                result = new ActionResult("订单已新增", List.of(cardCode()));
+            } else {
+                repository.updateOrder(context.requiredParam("orderNo"), customerId, memberId, amount, status, placedAt);
+                result = new ActionResult("订单已修改", List.of(cardCode()));
+            }
+        }
         completedRequests.put(key, result);
         return result;
+    }
+
+    private String required(ActionCommand command, String name) {
+        String value = optional(command, name);
+        if (value == null || value.isBlank()) throw new IllegalArgumentException(name + " is required");
+        return value;
+    }
+
+    private String optional(ActionCommand command, String name) {
+        Object value = command.getValues().get(name);
+        return value == null ? null : String.valueOf(value).trim();
     }
 }

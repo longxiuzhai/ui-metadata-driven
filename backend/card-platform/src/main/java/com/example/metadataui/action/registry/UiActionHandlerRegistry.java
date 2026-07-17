@@ -16,12 +16,14 @@ public class UiActionHandlerRegistry {
     public UiActionHandlerRegistry(List<UiActionHandler> handlers) {
         Map<String, UiActionHandler> registered = new LinkedHashMap<>();
         for (UiActionHandler handler : handlers) {
-            if (!StringUtils.hasText(handler.actionCode())) {
-                throw new IllegalStateException("UI action handler actionCode is required");
-            }
-            if (registered.putIfAbsent(handler.actionCode(), handler) != null) {
-                throw new IllegalStateException("duplicate UI action handler: " + handler.actionCode());
-            }
+            if (handler.actionCodes() == null || handler.actionCodes().isEmpty())
+                throw new IllegalStateException("UI action handler actionCodes are required");
+            handler.actionCodes().forEach(actionCode -> {
+                if (!StringUtils.hasText(actionCode))
+                    throw new IllegalStateException("UI action handler actionCode is required");
+                if (registered.putIfAbsent(actionCode, handler) != null)
+                    throw new IllegalStateException("duplicate UI action handler: " + actionCode);
+            });
         }
         this.handlers = Map.copyOf(registered);
     }

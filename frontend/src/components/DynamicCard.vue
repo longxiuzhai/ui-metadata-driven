@@ -31,9 +31,16 @@ const rowActionCodes = computed(() =>
     ? props.definition.props.rowActionCodes.map(String)
     : []
 )
+const tableActionCodes = computed(() =>
+  Array.isArray(props.definition.props.tableActionCodes)
+    ? props.definition.props.tableActionCodes.map(String)
+    : []
+)
 const headerActions = computed(() =>
   props.definition.actions.filter(action =>
-    action.code !== rowActionCode.value && !rowActionCodes.value.includes(action.code)
+    action.code !== rowActionCode.value
+      && !rowActionCodes.value.includes(action.code)
+      && !tableActionCodes.value.includes(action.code)
   )
 )
 const isEmpty = computed(
@@ -127,7 +134,7 @@ watch(
       <i />
     </div>
     <div v-else-if="data === null" class="state">等待进入视口…</div>
-    <div v-else-if="isEmpty" class="state">暂无数据</div>
+    <div v-else-if="isEmpty && tableActionCodes.length === 0" class="state">暂无数据</div>
     <component
       v-else
       :is="resolvedComponent"

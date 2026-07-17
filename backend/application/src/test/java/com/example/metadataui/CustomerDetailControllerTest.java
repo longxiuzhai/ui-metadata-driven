@@ -46,17 +46,23 @@ class CustomerDetailControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pageCode").value("customer_list"))
                 .andExpect(jsonPath("$.cards[0].dataApi").value("/api/customers"))
-                .andExpect(jsonPath("$.cards[0].props.rowActionCode").value("open_customer"))
-                .andExpect(jsonPath("$.cards[0].props.rowActionCodes[0]").value("delete_customer"))
-                .andExpect(jsonPath("$.cards[0].actions[1].type").value("execute"))
-                .andExpect(jsonPath("$.cards[0].actions[0].params.customerId.source").value("card-data"));
+                .andExpect(jsonPath("$.cards[0].props.tableActionCodes[0]").value("create_customer"))
+                .andExpect(jsonPath("$.cards[0].props.rowActionCodes",
+                        contains("view_customer", "edit_customer", "delete_customer")))
+                .andExpect(jsonPath("$.cards[0].props.columns[0].fixed").value("left"))
+                .andExpect(jsonPath("$.cards[0].actions[0].target.actionCode").value("customer.create"))
+                .andExpect(jsonPath("$.cards[0].actions[1].params.customerId.source").value("card-data"))
+                .andExpect(jsonPath("$.cards[0].actions[3].type").value("execute"));
 
         mvc.perform(get("/api/ui/pages/order_list/cards"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pageCode").value("order_list"))
                 .andExpect(jsonPath("$.cards[0].dataApi").value("/api/orders"))
-                .andExpect(jsonPath("$.cards[0].props.rowActionCodes[0]").value("delete_order"))
-                .andExpect(jsonPath("$.cards[0].actions[1].target.actionCode").value("order.delete"));
+                .andExpect(jsonPath("$.cards[0].props.tableActionCodes[0]").value("create_order"))
+                .andExpect(jsonPath("$.cards[0].props.rowActionCodes",
+                        contains("view_order", "edit_order", "delete_order")))
+                .andExpect(jsonPath("$.cards[0].props.columns[0].fixed").value("left"))
+                .andExpect(jsonPath("$.cards[0].actions[3].target.actionCode").value("order.delete"));
 
         mvc.perform(get("/api/ui/pages/order_list/cards").param("customerId", "1001"))
                 .andExpect(status().isOk())

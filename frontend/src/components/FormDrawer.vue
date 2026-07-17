@@ -20,6 +20,12 @@ const loading = ref(false)
 const submitting = ref(false)
 const error = ref('')
 const formComponent = computed(() => formRegistry[formCode.value])
+const formTitle = computed(() => {
+  if (formCode.value === 'customer_list_edit') return values.value.customerId ? '修改客户' : '新增客户'
+  if (formCode.value === 'order_list_edit') return values.value.orderNo ? '修改订单' : '新增订单'
+  if (formCode.value === 'customer_basic_edit') return '编辑客户基本信息'
+  return '编辑表单'
+})
 
 watch(
   () => [props.modelValue, props.request] as const,
@@ -80,9 +86,9 @@ async function submit() {
 <template>
   <Teleport to="body">
     <div v-if="modelValue" class="overlay" @click.self="close">
-      <aside class="drawer" role="dialog" aria-modal="true" aria-label="编辑表单">
+      <aside class="drawer" role="dialog" aria-modal="true" :aria-label="formTitle">
         <header>
-          <h2>编辑客户基本信息</h2>
+          <h2>{{ formTitle }}</h2>
           <button class="close" :disabled="submitting" @click="close">×</button>
         </header>
 

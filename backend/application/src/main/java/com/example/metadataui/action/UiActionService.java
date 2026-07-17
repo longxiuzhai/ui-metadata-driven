@@ -30,7 +30,7 @@ public class UiActionService {
     public ActionPreparation prepare(String actionCode, ActionPrepareRequest request,
                                      String tenantId, String userId, String permissionHeader) {
         UiActionHandler handler = handler(actionCode);
-        ActionContext context = context(request, tenantId, userId, permissionHeader);
+        ActionContext context = context(actionCode, request, tenantId, userId, permissionHeader);
         authorize(handler, context);
         return handler.prepare(context);
     }
@@ -41,7 +41,7 @@ public class UiActionService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "requestId is required");
         }
         UiActionHandler handler = handler(actionCode);
-        ActionContext context = context(request, tenantId, userId, permissionHeader);
+        ActionContext context = context(actionCode, request, tenantId, userId, permissionHeader);
         authorize(handler, context);
         long started = System.currentTimeMillis();
         try {
@@ -62,7 +62,7 @@ public class UiActionService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "unknown actionCode"));
     }
 
-    private ActionContext context(ActionPrepareRequest request, String tenantId,
+    private ActionContext context(String actionCode, ActionPrepareRequest request, String tenantId,
                                   String userId, String permissionHeader) {
         if (!StringUtils.hasText(request.getPageCode()) || !StringUtils.hasText(request.getCardCode())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "pageCode and cardCode are required");
@@ -70,7 +70,7 @@ public class UiActionService {
         CardRequestContext cardContext = contextFactory.create(
                 request.getPageCode(), tenantId, userId, permissionHeader, null, request.getParams());
         return new ActionContext(
-                tenantId, userId, request.getPageCode(), request.getCardCode(),
+                tenantId, userId, actionCode, request.getPageCode(), request.getCardCode(),
                 cardContext.getPermissions(), request.getParams());
     }
 

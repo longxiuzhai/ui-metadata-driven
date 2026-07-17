@@ -5,8 +5,10 @@ import com.example.metadataui.action.model.ActionContext;
 import com.example.metadataui.action.model.ActionPreparation;
 import com.example.metadataui.action.model.ActionResult;
 
+import java.util.Set;
+
 public interface UiActionHandler {
-    String actionCode();
+    Set<String> actionCodes();
 
     String permission();
 

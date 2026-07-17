@@ -17,6 +17,7 @@ import com.example.metadataui.customization.demo.mapper.BizOrderMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
@@ -64,6 +65,24 @@ public class DemoCustomerRepository {
                         .orderByDesc(BizCustomer::getId)).stream()
                 .map(this::customerValues)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public CustomerSnapshot createCustomer(String customerId, String name, String unionId,
+                                           String mobile, String status) {
+        LocalDateTime now = LocalDateTime.now();
+        BizCustomer customer = new BizCustomer();
+        customer.setTenantId(tenantProvider.currentTenantId());
+        customer.setCustomerId(customerId);
+        customer.setName(name);
+        customer.setUnionId(unionId == null || unionId.isBlank() ? null : unionId);
+        customer.setMobile(mobile);
+        customer.setStatus(status);
+        customer.setVersion(1L);
+        customer.setCreatedAt(now);
+        customer.setUpdatedAt(now);
+        customerMapper.insert(customer);
+        return new CustomerSnapshot(customer);
     }
 
     @Transactional
@@ -141,6 +160,45 @@ public class DemoCustomerRepository {
         BizOrder order = orderMapper.selectOne(new LambdaQueryWrapper<BizOrder>()
                 .eq(BizOrder::getTenantId, tenantProvider.currentTenantId()).eq(BizOrder::getOrderNo, orderNo));
         if (order == null) throw new BusinessDataNotFoundException("订单不存在: " + orderNo);
+        return orderValues(order);
+    }
+
+    @Transactional
+    public Map<String, Object> createOrder(String orderNo, String customerId, String memberId,
+                                           BigDecimal amount, String status, LocalDateTime placedAt) {
+        get(customerId);
+        if (memberId != null && !memberId.isBlank()) member(memberId);
+        LocalDateTime now = LocalDateTime.now();
+        BizOrder order = new BizOrder();
+        order.setTenantId(tenantProvider.currentTenantId());
+        order.setOrderNo(orderNo);
+        order.setCustomerId(customerId);
+        order.setMemberId(memberId == null || memberId.isBlank() ? null : memberId);
+        order.setOrderAmount(amount);
+        order.setOrderStatus(status);
+        order.setPlacedAt(placedAt);
+        order.setCreatedAt(now);
+        order.setUpdatedAt(now);
+        orderMapper.insert(order);
+        return orderValues(order);
+    }
+
+    @Transactional
+    public Map<String, Object> updateOrder(String orderNo, String customerId, String memberId,
+                                           BigDecimal amount, String status, LocalDateTime placedAt) {
+        BizOrder order = orderMapper.selectOne(new LambdaQueryWrapper<BizOrder>()
+                .eq(BizOrder::getTenantId, tenantProvider.currentTenantId())
+                .eq(BizOrder::getOrderNo, orderNo));
+        if (order == null) throw new BusinessDataNotFoundException("订单不存在: " + orderNo);
+        get(customerId);
+        if (memberId != null && !memberId.isBlank()) member(memberId);
+        order.setCustomerId(customerId);
+        order.setMemberId(memberId == null || memberId.isBlank() ? null : memberId);
+        order.setOrderAmount(amount);
+        order.setOrderStatus(status);
+        order.setPlacedAt(placedAt);
+        order.setUpdatedAt(LocalDateTime.now());
+        orderMapper.updateById(order);
         return orderValues(order);
     }
 

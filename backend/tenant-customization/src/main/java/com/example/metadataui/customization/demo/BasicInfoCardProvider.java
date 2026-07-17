@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -74,8 +75,8 @@ public class BasicInfoCardProvider implements CardProvider, UiActionHandler {
     }
 
     @Override
-    public String actionCode() {
-        return ACTION_CODE;
+    public Set<String> actionCodes() {
+        return Set.of(ACTION_CODE);
     }
 
     @Override
