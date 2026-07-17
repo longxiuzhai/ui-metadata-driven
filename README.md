@@ -89,7 +89,7 @@ GET /api/ui/pages/{pageCode}/cards
   → 每张卡片独立请求 dataApi
 ```
 
-客户详情的“基本信息”卡片还演示了完整修改链路：元数据动作 → 前端表单注册表 → Action prepare/execute API → 后端 `UiActionHandler` → 定向刷新卡片。
+客户详情的“基本信息”卡片还演示了完整修改链路：同一个业务实现类同时实现 `CardProvider` 和 `UiActionHandler`，从元数据动作经过前端表单与 Action API，最终执行修改并定向刷新卡片。
 
 客户列表和订单列表分别由 `customer_list`、`order_list` 元数据页面装配。点击客户行进入客户详情；点击订单行进入订单所属客户的详情；客户详情中的“查看订单”进入带 `customerId` 的订单列表。`DataTableCard` 的行点击同样由动作元数据驱动。
 
