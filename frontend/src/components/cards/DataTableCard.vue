@@ -81,11 +81,11 @@ function activateAction(action: CardAction, row: Record<string, unknown>) {
 <template>
   <div class="table-card">
     <div class="table-toolbar">
+      <div class="table-summary">共 {{ data.length }} {{ summaryLabel ?? '条数据' }}</div>
       <div class="table-actions">
         <button v-for="action in tableActions" :key="action.code" type="button"
                 class="toolbar-action" @click="emit('action', action, {})">{{ action.label }}</button>
       </div>
-      <div class="table-summary">共 {{ data.length }} {{ summaryLabel ?? '条数据' }}</div>
     </div>
     <div class="table-scroll">
       <table :style="{ minWidth: `${minTableWidth ?? 960}px` }">
@@ -129,7 +129,7 @@ function activateAction(action: CardAction, row: Record<string, unknown>) {
 .table-card { min-width: 0; }
 .table-toolbar { display: flex; min-height: 32px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .table-actions { display: flex; gap: 8px; }
-.table-summary { color: #8491a5; font-size: 12px; text-align: right; }
+.table-summary { color: #8491a5; font-size: 12px; text-align: left; }
 .toolbar-action { padding: 7px 14px; border: 0; border-radius: 7px; background: #2563eb; color: #fff; cursor: pointer; }
 .table-scroll { overflow-x: auto; border: 1px solid #e6ebf2; border-radius: 10px; }
 table { width: 100%; border-collapse: collapse; table-layout: fixed; }
