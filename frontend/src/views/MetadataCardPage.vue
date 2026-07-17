@@ -93,7 +93,6 @@ watch(
 
 <template>
   <main class="business-main">
-    <slot name="before-cards" />
     <div v-if="loading" class="page-state">正在装配页面卡片…</div>
     <div v-else-if="error" class="page-state error">
       {{ error }}
@@ -110,7 +109,11 @@ watch(
         :refresh-token="refreshTokens[card.code] ?? 0"
         :style="{ '--xs': card.span.xs, '--md': card.span.md, '--xl': card.span.xl }"
         @action="(action, data) => handleCardAction(action, data, card.code)"
-      />
+      >
+        <template #before-table-cards>
+          <slot name="before-cards" />
+        </template>
+      </DynamicCard>
       <div v-if="page.cards.length === 0" class="page-state empty">当前没有可用卡片</div>
     </section>
   </main>

@@ -118,7 +118,7 @@ watch(
 <template>
   <article ref="root" class="card">
     <header>
-      <h2>{{ definition.title }}</h2>
+      <slot name="before-table-cards" />
       <div>
         <button
           v-for="action in headerActions"
