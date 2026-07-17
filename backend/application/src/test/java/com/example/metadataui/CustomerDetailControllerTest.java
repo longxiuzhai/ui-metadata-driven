@@ -41,12 +41,24 @@ class CustomerDetailControllerTest {
     }
 
     @Test
-    void exposesCustomerOrdersAsIndependentMetadataPage() throws Exception {
-        mvc.perform(get("/api/ui/pages/customer_orders/cards").param("customerId", "1001"))
+    void exposesCustomerAndOrderListMetadataPages() throws Exception {
+        mvc.perform(get("/api/ui/pages/customer_list/cards"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pageCode").value("customer_orders"))
+                .andExpect(jsonPath("$.pageCode").value("customer_list"))
+                .andExpect(jsonPath("$.cards[0].dataApi").value("/api/customers"))
+                .andExpect(jsonPath("$.cards[0].props.rowActionCode").value("open_customer"))
+                .andExpect(jsonPath("$.cards[0].actions[0].params.customerId.source").value("card-data"));
+
+        mvc.perform(get("/api/ui/pages/order_list/cards"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pageCode").value("order_list"))
+                .andExpect(jsonPath("$.cards[0].dataApi").value("/api/orders"));
+
+        mvc.perform(get("/api/ui/pages/order_list/cards").param("customerId", "1001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pageCode").value("order_list"))
                 .andExpect(jsonPath("$.cards", hasSize(1)))
-                .andExpect(jsonPath("$.cards[0].code").value("customer_order_list"))
+                .andExpect(jsonPath("$.cards[0].code").value("order_list"))
                 .andExpect(jsonPath("$.cards[0].component").value("DataTableCard"))
                 .andExpect(jsonPath("$.cards[0].props.columns", hasSize(12)))
                 .andExpect(jsonPath("$.cards[0].dataApi").value("/api/customers/{customerId}/orders"));
@@ -62,6 +74,11 @@ class CustomerDetailControllerTest {
 
     @Test
     void readsCustomerTagsTracesOrdersAndMemberFromDatabase() throws Exception {
+        mvc.perform(get("/api/customers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].customerId").isNotEmpty());
+
         mvc.perform(get("/api/customers/1001/basic"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.customerId").value("1001"))
@@ -97,6 +114,10 @@ class CustomerDetailControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].orderNo").value("O20260710002"));
+
+        mvc.perform(get("/api/orders"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)));
 
         mvc.perform(get("/api/members/M10001"))
                 .andExpect(status().isOk())

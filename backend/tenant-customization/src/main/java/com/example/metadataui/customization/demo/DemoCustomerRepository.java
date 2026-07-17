@@ -57,6 +57,15 @@ public class DemoCustomerRepository {
         return new CustomerSnapshot(customer);
     }
 
+    public List<Map<String, Object>> customers() {
+        return customerMapper.selectList(new LambdaQueryWrapper<BizCustomer>()
+                        .eq(BizCustomer::getTenantId, tenantProvider.currentTenantId())
+                        .orderByDesc(BizCustomer::getUpdatedAt)
+                        .orderByDesc(BizCustomer::getId)).stream()
+                .map(this::customerValues)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public CustomerSnapshot update(String customerId, long expectedVersion,
                                    String name, String mobile, String status) {
@@ -103,12 +112,14 @@ public class DemoCustomerRepository {
     }
 
     public List<Map<String, Object>> orders(String customerId, String status) {
-        get(customerId);
         LambdaQueryWrapper<BizOrder> query = new LambdaQueryWrapper<BizOrder>()
                         .eq(BizOrder::getTenantId, tenantProvider.currentTenantId())
-                        .eq(BizOrder::getCustomerId, customerId)
                         .orderByDesc(BizOrder::getPlacedAt)
                         .orderByDesc(BizOrder::getId);
+        if (customerId != null && !customerId.isBlank()) {
+            get(customerId);
+            query.eq(BizOrder::getCustomerId, customerId);
+        }
         if (status != null && !status.isBlank()) query.eq(BizOrder::getOrderStatus, status.trim().toUpperCase());
         return orderMapper.selectList(query).stream()
                 .map(this::orderValues).collect(Collectors.toList());
@@ -152,6 +163,18 @@ public class DemoCustomerRepository {
         value.put("placedAt", DATE_TIME.format(order.getPlacedAt()));
         value.put("createdAt", DATE_TIME.format(order.getCreatedAt()));
         value.put("updatedAt", DATE_TIME.format(order.getUpdatedAt()));
+        return value;
+    }
+
+    private Map<String, Object> customerValues(BizCustomer customer) {
+        Map<String, Object> value = new LinkedHashMap<>();
+        value.put("customerId", customer.getCustomerId());
+        value.put("name", customer.getName());
+        value.put("unionId", customer.getUnionId());
+        value.put("mobile", customer.getMobile());
+        value.put("status", customer.getStatus());
+        value.put("createdAt", DATE_TIME.format(customer.getCreatedAt()));
+        value.put("updatedAt", DATE_TIME.format(customer.getUpdatedAt()));
         return value;
     }
 

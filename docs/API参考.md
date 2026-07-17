@@ -63,8 +63,9 @@ GET /api/ui/pages/{pageCode}/cards
 | `pageCode` | 典型查询参数 | 默认卡片 |
 |---|---|---|
 | `home` | 无 | `work_summary`、`recent_activity` |
+| `customer_list` | 无 | `customer_list` |
 | `customer_detail` | `customerId` | `basic_info`、`friend_tags`、`behavior_trace` |
-| `customer_orders` | `customerId` | `customer_order_list` |
+| `order_list` | 可选 `customerId` | `order_list` |
 
 示例：
 
@@ -113,11 +114,12 @@ curl 'http://localhost:8080/api/ui/pages/customer_detail/cards?customerId=1001' 
 
 | 方法与路径 | 用途 |
 |---|---|
+| `GET /api/customers` | 当前租户的客户列表 |
 | `GET /api/customers/{id}/basic` | 客户基本信息 |
 | `GET /api/customers/{id}/tags` | 客户标签 |
 | `GET /api/customers/{id}/traces` | 客户行为轨迹 |
 | `GET /api/customers/{id}/orders` | 指定客户的订单列表，包含会员 ID |
-| `GET /api/orders?customerId={id}&status={status}` | 按客户与可选状态查询订单 |
+| `GET /api/orders?customerId={id}&status={status}` | 订单列表；客户 ID 和状态均为可选条件 |
 | `GET /api/orders/{orderNo}` | 订单详情 |
 | `GET /api/members/{memberId}` | 会员详情，包含会员 ID、UnionID、手机号 |
 | `GET /api/home/{userId}/work-summary` | 首页工作摘要 |
@@ -125,14 +127,17 @@ curl 'http://localhost:8080/api/ui/pages/customer_detail/cards?customerId=1001' 
 
 客户域接口由 MyBatis-Plus 查询 `V2__create_customer_domain_schema.sql` 创建的业务表。前端只接受以 `/api/` 开头的数据地址，并使用页面上下文替换 `{customerId}`、`{userId}` 等占位符。未替换的占位符会导致卡片加载失败。
 
-客户订单页面元数据：
+订单列表页面元数据：
 
 ```bash
-curl 'http://localhost:8080/api/ui/pages/customer_orders/cards?customerId=1001' \
+curl 'http://localhost:8080/api/ui/pages/order_list/cards' \
+  -H 'Authorization: Bearer <token>'
+
+curl 'http://localhost:8080/api/ui/pages/order_list/cards?customerId=1001' \
   -H 'Authorization: Bearer <token>'
 ```
 
-订单列表除订单号、客户 ID、会员 ID、金额、状态和下单时间外，还返回关联会员的 UnionID、手机号、等级、状态，以及订单创建和更新时间。
+不传 `customerId` 时展示当前租户全部订单，传入时只展示指定客户订单。订单行的动作参数从该行 `card-data.customerId` 解析并跳转客户详情。订单列表除订单号、客户 ID、会员 ID、金额、状态和下单时间外，还返回关联会员的 UnionID、手机号、等级、状态，以及订单创建和更新时间。
 
 客户基本信息示例：
 

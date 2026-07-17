@@ -17,6 +17,10 @@ public final class ParameterBinding {
         return new ParameterBinding("page-context", path, null, true);
     }
 
+    public static ParameterBinding cardData(String path) {
+        return new ParameterBinding("card-data", path, null, true);
+    }
+
     public static ParameterBinding literal(Object value) {
         return new ParameterBinding("literal", null, value, false);
     }

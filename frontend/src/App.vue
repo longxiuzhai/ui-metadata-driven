@@ -34,6 +34,10 @@ function navigateSecuritySection(section: SecuritySection) {
   router.push({ name: 'security-admin', query: { section } })
 }
 
+function isMenuActive(menuCode: string, menuPath: string) {
+  return route.meta.menuCode === menuCode || route.path === menuPath.split('?')[0]
+}
+
 async function signOut() {
   await logout()
   await router.replace('/login')
@@ -78,7 +82,7 @@ watch(() => route.fullPath, async () => {
         <div class="sidebar-heading"><span>工作空间</span><small>{{ authState.menus.length }} 个入口</small></div>
         <nav class="side-menu" aria-label="主菜单">
           <template v-for="menu in authState.menus" :key="menu.id">
-            <button class="primary-menu" :class="{ active: route.path === menu.path.split('?')[0] }"
+            <button class="primary-menu" :class="{ active: isMenuActive(menu.code, menu.path) }"
                     @click="router.push(menu.path)">
               <span class="menu-icon">{{ menu.name.slice(0, 1) }}</span>
               <span class="menu-copy"><b>{{ menu.name }}</b><small>{{ menu.code }}</small></span>

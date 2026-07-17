@@ -42,7 +42,11 @@ class AuthRbacControllerTest {
                 .andExpect(jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[*].code", hasItem("home")))
                 .andExpect(jsonPath("$[*].code", hasItem("customer")))
-                .andExpect(jsonPath("$[*].code", hasItem("orders")));
+                .andExpect(jsonPath("$[*].code", hasItem("orders")))
+                .andExpect(jsonPath("$[?(@.code == 'customer')].name", hasItem("客户列表")))
+                .andExpect(jsonPath("$[?(@.code == 'customer')].path", hasItem("/customers")))
+                .andExpect(jsonPath("$[?(@.code == 'orders')].name", hasItem("订单列表")))
+                .andExpect(jsonPath("$[?(@.code == 'orders')].path", hasItem("/orders")));
     }
 
     @Test

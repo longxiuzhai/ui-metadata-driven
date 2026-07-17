@@ -72,9 +72,9 @@ public class RbacBootstrap implements ApplicationRunner {
         permissions.add(permission("system:menu:manage", "菜单管理", "system.menu", "manage"));
 
         SysMenu home = menu("home", "首页", "/", "home", 10, "home:read");
-        SysMenu customer = menu("customer", "客户详情", "/customer-detail?customerId=1001",
+        SysMenu customer = menu("customer", "客户列表", "/customers",
                 "users", 20, "customer:read");
-        SysMenu orders = menu("orders", "客户订单", "/orders?customerId=1001",
+        SysMenu orders = menu("orders", "订单列表", "/orders",
                 "receipt", 30, "order:read");
         SysMenu security = menu("security", "权限管理", "/admin/security",
                 "shield", 90, "system:role:manage");

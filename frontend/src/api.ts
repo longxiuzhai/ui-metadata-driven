@@ -34,10 +34,15 @@ export async function getCustomerDetailCards(customerId: string): Promise<CardPa
   )
 }
 
-export async function getCustomerOrderCards(customerId: string): Promise<CardPageDefinition> {
+export async function getCustomerListCards(): Promise<CardPageDefinition> {
+  return getCardPage('/api/ui/pages/customer_list/cards', 'customer_list')
+}
+
+export async function getOrderListCards(customerId?: string): Promise<CardPageDefinition> {
+  const query = customerId ? `?customerId=${encodeURIComponent(customerId)}` : ''
   return getCardPage(
-    `/api/ui/pages/customer_orders/cards?customerId=${encodeURIComponent(customerId)}`,
-    'customer_orders'
+    `/api/ui/pages/order_list/cards${query}`,
+    'order_list'
   )
 }
 

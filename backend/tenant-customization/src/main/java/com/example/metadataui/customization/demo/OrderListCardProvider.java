@@ -8,37 +8,42 @@ import com.example.metadataui.card.model.CardDefinition;
 import com.example.metadataui.card.model.ParameterBinding;
 import com.example.metadataui.card.model.ResponsiveSpan;
 import com.example.metadataui.card.spi.CardProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 
 @Component
-@ConditionalOnProperty(
-        name = "metadata.cards.customer-orders.enabled",
-        havingValue = "true",
-        matchIfMissing = true)
 @CardConditional(permissions = "order:read")
-public class CustomerOrdersCardProvider implements CardProvider {
+public class OrderListCardProvider implements CardProvider {
     @Override
     public String pageCode() {
-        return "customer_orders";
+        return "order_list";
     }
 
     @Override
     public String cardCode() {
-        return "customer_order_list";
+        return "order_list";
     }
 
     @Override
     public CardDefinition definition(CardRequestContext context) {
+        String customerId = context.parameter("customerId");
+        boolean customerOrders = customerId != null && !customerId.isBlank();
+        CardAction openCustomer = new CardAction(
+                "open_customer", "查看客户", "navigate",
+                ActionTarget.route("customer_detail"), "customer:read",
+                Map.of("customerId", ParameterBinding.cardData("customerId")), null);
         return new CardDefinition(
-                cardCode(), "订单列表", "DataTableCard", 10,
-                new ResponsiveSpan(24, 24, 24),
-                "/api/customers/{customerId}/orders", "eager", "order:read",
+                cardCode(), customerOrders ? "客户 " + customerId + " 的订单" : "订单列表",
+                "DataTableCard", 10, new ResponsiveSpan(24, 24, 24),
+                customerOrders ? "/api/customers/{customerId}/orders" : "/api/orders",
+                "eager", "order:read",
                 Map.of(
                         "rowKey", "orderNo",
+                        "rowActionCode", "open_customer",
+                        "summaryLabel", "笔订单",
+                        "minTableWidth", 1600,
                         "columns", List.of(
                                 Map.of("key", "orderNo", "label", "订单号", "width", 150),
                                 Map.of("key", "customerId", "label", "客户ID", "width", 90),
@@ -52,9 +57,6 @@ public class CustomerOrdersCardProvider implements CardProvider {
                                 Map.of("key", "placedAt", "label", "下单时间", "width", 150),
                                 Map.of("key", "createdAt", "label", "创建时间", "width", 150),
                                 Map.of("key", "updatedAt", "label", "更新时间", "width", 150))),
-                List.of(new CardAction(
-                        "back_customer", "返回客户详情", "navigate",
-                        ActionTarget.route("customer_detail"), "customer:read",
-                        Map.of("customerId", ParameterBinding.pageContext("customerId")), null)));
+                List.of(openCustomer));
     }
 }

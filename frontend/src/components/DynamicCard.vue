@@ -25,6 +25,10 @@ const resolvedComponent = computed(
   () => cardRegistry[props.definition.component] ?? UnknownCard
 )
 const isUnknown = computed(() => !cardRegistry[props.definition.component])
+const rowActionCode = computed(() => String(props.definition.props.rowActionCode ?? ''))
+const headerActions = computed(() =>
+  props.definition.actions.filter(action => action.code !== rowActionCode.value)
+)
 const isEmpty = computed(
   () => data.value == null || (Array.isArray(data.value) && data.value.length === 0)
 )
@@ -97,7 +101,7 @@ watch(
       <h2>{{ definition.title }}</h2>
       <div>
         <button
-          v-for="action in definition.actions"
+          v-for="action in headerActions"
           :key="action.code"
           @click="emit('action', action, data)"
         >
@@ -121,8 +125,10 @@ watch(
       v-else
       :is="resolvedComponent"
       :data="data"
+      :actions="definition.actions"
       v-bind="definition.props"
       :component-name="isUnknown ? definition.component : undefined"
+      @action="(action: CardAction, row: unknown) => emit('action', action, row)"
     />
   </article>
 </template>

@@ -27,6 +27,15 @@ describe('resolveParameters', () => {
     ).toThrow('动作参数缺失：customerId')
   })
 
+  it('resolves navigation parameters from the selected table row', () => {
+    expect(
+      resolveParameters(
+        { customerId: { source: 'card-data', path: 'customerId', required: true } },
+        { pageContext: {}, cardData: { orderNo: 'O1001', customerId: '1001' }, account: {} }
+      )
+    ).toEqual({ customerId: '1001' })
+  })
+
   it('does not traverse unsafe object paths', () => {
     expect(() =>
       resolveParameters(

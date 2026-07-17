@@ -16,6 +16,11 @@ public class DemoCardDataController {
         this.customerRepository = customerRepository;
     }
 
+    @GetMapping("/api/customers")
+    public List<Map<String, Object>> customers() {
+        return customerRepository.customers();
+    }
+
     @GetMapping("/api/customers/{id}/basic")
     public Map<String, Object> basic(@PathVariable String id) {
         return customerRepository.get(id).values();
@@ -37,7 +42,7 @@ public class DemoCardDataController {
     }
 
     @GetMapping("/api/orders")
-    public List<Map<String, Object>> orderList(@RequestParam String customerId,
+    public List<Map<String, Object>> orderList(@RequestParam(required = false) String customerId,
                                                @RequestParam(required = false) String status) {
         return customerRepository.orders(customerId, status);
     }
