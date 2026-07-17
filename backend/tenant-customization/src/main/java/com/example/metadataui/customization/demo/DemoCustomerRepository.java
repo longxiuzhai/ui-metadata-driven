@@ -135,13 +135,23 @@ public class DemoCustomerRepository {
     }
 
     private Map<String, Object> orderValues(BizOrder order) {
+        BizMember member = order.getMemberId() == null ? null : memberMapper.selectOne(
+                new LambdaQueryWrapper<BizMember>()
+                        .eq(BizMember::getTenantId, tenantProvider.currentTenantId())
+                        .eq(BizMember::getMemberId, order.getMemberId()));
         Map<String, Object> value = new LinkedHashMap<>();
         value.put("orderNo", order.getOrderNo());
         value.put("customerId", order.getCustomerId());
         value.put("memberId", order.getMemberId());
+        value.put("memberUnionId", member == null ? null : member.getUnionId());
+        value.put("memberMobile", member == null ? null : member.getMobile());
+        value.put("memberLevel", member == null ? null : member.getMemberLevel());
+        value.put("memberStatus", member == null ? null : member.getStatus());
         value.put("orderAmount", order.getOrderAmount());
         value.put("orderStatus", order.getOrderStatus());
         value.put("placedAt", DATE_TIME.format(order.getPlacedAt()));
+        value.put("createdAt", DATE_TIME.format(order.getCreatedAt()));
+        value.put("updatedAt", DATE_TIME.format(order.getUpdatedAt()));
         return value;
     }
 

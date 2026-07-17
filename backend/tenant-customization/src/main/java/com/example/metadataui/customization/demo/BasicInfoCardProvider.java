@@ -54,9 +54,7 @@ public class BasicInfoCardProvider implements CardProvider {
                                 "orders", "查看订单", "navigate",
                                 ActionTarget.route("order_list"),
                                 "order:read",
-                                Map.of(
-                                        "customerId", ParameterBinding.pageContext("customerId"),
-                                        "status", ParameterBinding.literal("OPEN")),
+                                Map.of("customerId", ParameterBinding.pageContext("customerId")),
                                 null)));
     }
 }

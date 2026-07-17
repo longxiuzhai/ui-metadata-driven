@@ -41,6 +41,18 @@ class CustomerDetailControllerTest {
     }
 
     @Test
+    void exposesCustomerOrdersAsIndependentMetadataPage() throws Exception {
+        mvc.perform(get("/api/ui/pages/customer_orders/cards").param("customerId", "1001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pageCode").value("customer_orders"))
+                .andExpect(jsonPath("$.cards", hasSize(1)))
+                .andExpect(jsonPath("$.cards[0].code").value("customer_order_list"))
+                .andExpect(jsonPath("$.cards[0].component").value("DataTableCard"))
+                .andExpect(jsonPath("$.cards[0].props.columns", hasSize(12)))
+                .andExpect(jsonPath("$.cards[0].dataApi").value("/api/customers/{customerId}/orders"));
+    }
+
+    @Test
     void exposesCurrentAccountFromCoreApplication() throws Exception {
         mvc.perform(get("/api/accounts/me"))
                 .andExpect(status().isOk())
@@ -70,7 +82,12 @@ class CustomerDetailControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].orderNo").value("O20260715001"))
-                .andExpect(jsonPath("$[0].memberId").value("M10001"));
+                .andExpect(jsonPath("$[0].memberId").value("M10001"))
+                .andExpect(jsonPath("$[0].memberUnionId").value("o_demo_union_1001"))
+                .andExpect(jsonPath("$[0].memberMobile").value("13800138000"))
+                .andExpect(jsonPath("$[0].memberLevel").value("GOLD"))
+                .andExpect(jsonPath("$[0].createdAt").isNotEmpty())
+                .andExpect(jsonPath("$[0].updatedAt").isNotEmpty());
 
         mvc.perform(get("/api/orders/O20260715001"))
                 .andExpect(status().isOk())

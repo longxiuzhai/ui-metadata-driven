@@ -2,6 +2,7 @@ import type { Component } from 'vue'
 import KeyValueCard from './KeyValueCard.vue'
 import TagGroupCard from './TagGroupCard.vue'
 import TimelineCard from './TimelineCard.vue'
+import DataTableCard from './DataTableCard.vue'
 
 /**
  * 动态卡片白名单。
@@ -17,5 +18,6 @@ import TimelineCard from './TimelineCard.vue'
 export const cardRegistry: Readonly<Record<string, Component>> = {
   KeyValueCard,
   TagGroupCard,
-  TimelineCard
+  TimelineCard,
+  DataTableCard
 }

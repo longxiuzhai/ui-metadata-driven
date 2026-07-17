@@ -64,6 +64,7 @@ GET /api/ui/pages/{pageCode}/cards
 |---|---|---|
 | `home` | 无 | `work_summary`、`recent_activity` |
 | `customer_detail` | `customerId` | `basic_info`、`friend_tags`、`behavior_trace` |
+| `customer_orders` | `customerId` | `customer_order_list` |
 
 示例：
 
@@ -123,6 +124,15 @@ curl 'http://localhost:8080/api/ui/pages/customer_detail/cards?customerId=1001' 
 | `GET /api/home/{userId}/activities` | 首页最近动态 |
 
 客户域接口由 MyBatis-Plus 查询 `V2__create_customer_domain_schema.sql` 创建的业务表。前端只接受以 `/api/` 开头的数据地址，并使用页面上下文替换 `{customerId}`、`{userId}` 等占位符。未替换的占位符会导致卡片加载失败。
+
+客户订单页面元数据：
+
+```bash
+curl 'http://localhost:8080/api/ui/pages/customer_orders/cards?customerId=1001' \
+  -H 'Authorization: Bearer <token>'
+```
+
+订单列表除订单号、客户 ID、会员 ID、金额、状态和下单时间外，还返回关联会员的 UnionID、手机号、等级、状态，以及订单创建和更新时间。
 
 客户基本信息示例：
 

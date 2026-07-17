@@ -2,15 +2,14 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { createActionRuntime } from '../actions/ActionRuntime'
-import { getCustomerDetailCards, getHomeCards } from '../api'
 import DynamicCard from '../components/DynamicCard.vue'
 import FormDrawer from '../components/FormDrawer.vue'
 import type { ActionResult, CardAction, CardPageDefinition, OpenFormRequest } from '../types'
 
 const props = defineProps<{
-  kind: 'home' | 'customer'
-  customerId: string
-  userId: string
+  pageCode: string
+  context: Record<string, string>
+  loadDefinition: () => Promise<CardPageDefinition>
   reloadToken: number
 }>()
 
@@ -25,12 +24,7 @@ const toast = ref('')
 let toastTimer: ReturnType<typeof setTimeout> | undefined
 let loadSequence = 0
 
-const pageCode = computed(() => (props.kind === 'customer' ? 'customer_detail' : 'home'))
-const pageContext = computed<Record<string, string>>(() =>
-  props.kind === 'customer'
-    ? Object.fromEntries([['customerId', props.customerId]])
-    : Object.fromEntries([['userId', props.userId]])
-)
+const contextKey = computed(() => JSON.stringify(props.context))
 
 /**
  * 动态卡片动作统一在页面视图中落地：运行时不直接操作组件，
@@ -52,9 +46,7 @@ async function loadPage() {
   page.value = null
 
   try {
-    const result = props.kind === 'customer'
-      ? await getCustomerDetailCards(props.customerId)
-      : await getHomeCards()
+    const result = await props.loadDefinition()
     // 快速切换路由时，丢弃较早请求的响应，避免旧页面覆盖新页面。
     if (currentSequence === loadSequence) page.value = result
   } catch (reason) {
@@ -78,9 +70,9 @@ function notify(message: string) {
 
 function handleCardAction(action: CardAction, cardData: unknown, cardCode: string) {
   executeCardAction(action, {
-    pageCode: pageCode.value,
+    pageCode: props.pageCode,
     cardCode,
-    pageContext: pageContext.value,
+    pageContext: props.context,
     cardData
   })
 }
@@ -90,9 +82,9 @@ function handleFormSaved(result: ActionResult) {
   notify(result.message)
 }
 
-// 只监听真正影响页面元数据的输入；卡片自身刷新不会重新请求整页定义。
+// 业务 View 负责定义上下文和加载函数；容器只监听通用输入。
 watch(
-  () => [props.kind, props.customerId, props.userId, props.reloadToken],
+  () => [props.pageCode, contextKey.value, props.reloadToken],
   loadPage,
   { immediate: true }
 )
@@ -111,7 +103,7 @@ watch(
         v-for="card in page.cards"
         :key="card.code"
         :definition="card"
-        :context="pageContext"
+        :context="context"
         :refresh-token="refreshTokens[card.code] ?? 0"
         :style="{ '--xs': card.span.xs, '--md': card.span.md, '--xl': card.span.xl }"
         @action="(action, data) => handleCardAction(action, data, card.code)"

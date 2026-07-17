@@ -13,7 +13,8 @@ import java.util.regex.Pattern;
 
 @Component
 public class CardDefinitionValidator {
-    private static final Set<String> COMPONENTS = Set.of("KeyValueCard", "TagGroupCard", "TimelineCard");
+    private static final Set<String> COMPONENTS = Set.of(
+            "KeyValueCard", "TagGroupCard", "TimelineCard", "DataTableCard");
     private static final Set<String> LOAD_STRATEGIES = Set.of("eager", "on-visible");
     private static final Set<String> ACTION_TYPES = Set.of("refresh", "navigate", "open-form");
     private static final Set<String> BINDING_SOURCES = Set.of(

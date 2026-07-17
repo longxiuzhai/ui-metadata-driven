@@ -74,6 +74,8 @@ public class RbacBootstrap implements ApplicationRunner {
         SysMenu home = menu("home", "首页", "/", "home", 10, "home:read");
         SysMenu customer = menu("customer", "客户详情", "/customer-detail?customerId=1001",
                 "users", 20, "customer:read");
+        SysMenu orders = menu("orders", "客户订单", "/orders?customerId=1001",
+                "receipt", 30, "order:read");
         SysMenu security = menu("security", "权限管理", "/admin/security",
                 "shield", 90, "system:role:manage");
 
@@ -82,10 +84,10 @@ public class RbacBootstrap implements ApplicationRunner {
         assignRolePermissionsIfEmpty(userRole.getId(), permissions.stream()
                 .filter(value -> !value.getCode().startsWith("system:"))
                 .map(SysPermission::getId).collect(java.util.stream.Collectors.toList()));
-        assignRoleMenusIfEmpty(userRole.getId(), List.of(home.getId(), customer.getId()));
+        assignRoleMenusIfEmpty(userRole.getId(), List.of(home.getId(), customer.getId(), orders.getId()));
         assignRolePermissionsIfEmpty(adminRole.getId(), permissions.stream()
                 .map(SysPermission::getId).collect(java.util.stream.Collectors.toList()));
-        assignRoleMenusIfEmpty(adminRole.getId(), List.of(home.getId(), customer.getId(), security.getId()));
+        assignRoleMenusIfEmpty(adminRole.getId(), List.of(home.getId(), customer.getId(), orders.getId(), security.getId()));
 
         String adminUsername = properties.getAdminUsername().trim().toLowerCase();
         SysUser admin = userMapper.selectOne(new LambdaQueryWrapper<SysUser>()

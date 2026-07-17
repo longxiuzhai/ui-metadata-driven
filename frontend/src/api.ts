@@ -34,6 +34,13 @@ export async function getCustomerDetailCards(customerId: string): Promise<CardPa
   )
 }
 
+export async function getCustomerOrderCards(customerId: string): Promise<CardPageDefinition> {
+  return getCardPage(
+    `/api/ui/pages/customer_orders/cards?customerId=${encodeURIComponent(customerId)}`,
+    'customer_orders'
+  )
+}
+
 export async function getHomeCards(): Promise<CardPageDefinition> {
   return getCardPage('/api/ui/pages/home/cards', 'home')
 }

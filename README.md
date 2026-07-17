@@ -46,6 +46,7 @@ npm run dev
 
 - 首页：<http://localhost:5173/>
 - 客户详情：<http://localhost:5173/customer-detail?customerId=1001>
+- 客户订单：<http://localhost:5173/orders?customerId=1001>
 
 Vite 将 `/api` 代理到 `http://localhost:8080`。账号、角色、权限、菜单，以及客户、标签、轨迹、订单和会员演示数据均保存在 MySQL。
 
@@ -87,6 +88,8 @@ GET /api/ui/pages/{pageCode}/cards
 ```
 
 客户详情的“基本信息”卡片还演示了完整修改链路：元数据动作 → 前端表单注册表 → Action prepare/execute API → 后端 `UiActionHandler` → 定向刷新卡片。
+
+客户订单是独立的元数据页面 `customer_orders`，使用 `DataTableCard` 展示订单、关联会员身份和时间字段，不与客户详情卡片混排。
 
 账号与权限使用 RBAC 模型：注册用户自动绑定 `USER` 角色，JWT 请求会从数据库重新加载最新角色和权限，菜单按角色与权限动态返回；管理员可在“权限管理”中配置用户、角色、权限和菜单。
 

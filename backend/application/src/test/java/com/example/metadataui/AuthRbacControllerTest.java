@@ -39,9 +39,10 @@ class AuthRbacControllerTest {
         String token = token(registration);
         mvc.perform(get("/api/menus/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[*].code", hasItem("home")))
-                .andExpect(jsonPath("$[*].code", hasItem("customer")));
+                .andExpect(jsonPath("$[*].code", hasItem("customer")))
+                .andExpect(jsonPath("$[*].code", hasItem("orders")));
     }
 
     @Test

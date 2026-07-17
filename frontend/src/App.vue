@@ -4,9 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { authState, initializeAuth, logout } from './auth'
 import AuthPage from './components/AuthPage.vue'
 import SecurityAdmin from './components/SecurityAdmin.vue'
-import MetadataCardPage from './views/MetadataCardPage.vue'
 
-type PageKind = 'home' | 'customer' | 'orders'
 type SecuritySection = 'users' | 'roles' | 'permissions' | 'menus'
 
 const securitySections: ReadonlyArray<{ key: SecuritySection; label: string }> = [
@@ -21,23 +19,9 @@ const router = useRouter()
 // 顶栏刷新只需要改变信号；具体如何重新加载由当前业务视图负责。
 const pageReloadToken = ref(0)
 
-// App 只做路由到视图的分发，不处理动态卡片内部的数据和动作状态。
-const activePage = computed<PageKind>(() => {
-  if (route.name === 'customer-detail') return 'customer'
-  if (route.name === 'order-list') return 'orders'
-  return 'home'
-})
 const isAuthRoute = computed(() => route.name === 'login' || route.name === 'register')
 const isSecurityAdmin = computed(() => route.name === 'security-admin')
-const customerId = computed(() => String(route.query.customerId ?? '1001'))
-const orderContext = computed<Record<string, string>>(() =>
-  Object.fromEntries(Object.entries(route.query).map(([key, value]) => [key, String(value ?? '')]))
-)
-const heading = computed(() => {
-  if (activePage.value === 'customer') return '客户详情'
-  if (activePage.value === 'orders') return '客户订单'
-  return '首页'
-})
+const heading = computed(() => String(route.meta.title ?? '首页'))
 const activeSecuritySection = computed<SecuritySection>(() => {
   const section = String(route.query.section ?? 'users') as SecuritySection
   return securitySections.some(item => item.key === section) ? section : 'users'
@@ -123,21 +107,12 @@ watch(() => route.fullPath, async () => {
         </nav>
 
         <SecurityAdmin v-if="isSecurityAdmin" />
-        <MetadataCardPage
-          v-else-if="activePage !== 'orders'"
-          :kind="activePage"
-          :customer-id="customerId"
-          :user-id="authState.account.userId"
-          :reload-token="pageReloadToken"
-        />
-        <main v-else class="business-main">
-          <section class="orders-placeholder">
-            <h2>动态参数跳转成功</h2>
-            <p>当前页面从卡片动作接收到以下查询参数：</p>
-            <pre>{{ JSON.stringify(orderContext, null, 2) }}</pre>
-            <button @click="router.push({ name: 'customer-detail', query: { customerId } })">返回客户详情</button>
-          </section>
-        </main>
+        <RouterView v-else v-slot="{ Component }">
+          <component
+            :is="Component"
+            :reload-token="pageReloadToken"
+          />
+        </RouterView>
       </section>
     </div>
 
