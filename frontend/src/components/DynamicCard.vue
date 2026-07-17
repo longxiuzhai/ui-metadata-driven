@@ -26,8 +26,15 @@ const resolvedComponent = computed(
 )
 const isUnknown = computed(() => !cardRegistry[props.definition.component])
 const rowActionCode = computed(() => String(props.definition.props.rowActionCode ?? ''))
+const rowActionCodes = computed(() =>
+  Array.isArray(props.definition.props.rowActionCodes)
+    ? props.definition.props.rowActionCodes.map(String)
+    : []
+)
 const headerActions = computed(() =>
-  props.definition.actions.filter(action => action.code !== rowActionCode.value)
+  props.definition.actions.filter(action =>
+    action.code !== rowActionCode.value && !rowActionCodes.value.includes(action.code)
+  )
 )
 const isEmpty = computed(
   () => data.value == null || (Array.isArray(data.value) && data.value.length === 0)

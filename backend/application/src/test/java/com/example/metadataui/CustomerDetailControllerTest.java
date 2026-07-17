@@ -47,12 +47,16 @@ class CustomerDetailControllerTest {
                 .andExpect(jsonPath("$.pageCode").value("customer_list"))
                 .andExpect(jsonPath("$.cards[0].dataApi").value("/api/customers"))
                 .andExpect(jsonPath("$.cards[0].props.rowActionCode").value("open_customer"))
+                .andExpect(jsonPath("$.cards[0].props.rowActionCodes[0]").value("delete_customer"))
+                .andExpect(jsonPath("$.cards[0].actions[1].type").value("execute"))
                 .andExpect(jsonPath("$.cards[0].actions[0].params.customerId.source").value("card-data"));
 
         mvc.perform(get("/api/ui/pages/order_list/cards"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pageCode").value("order_list"))
-                .andExpect(jsonPath("$.cards[0].dataApi").value("/api/orders"));
+                .andExpect(jsonPath("$.cards[0].dataApi").value("/api/orders"))
+                .andExpect(jsonPath("$.cards[0].props.rowActionCodes[0]").value("delete_order"))
+                .andExpect(jsonPath("$.cards[0].actions[1].target.actionCode").value("order.delete"));
 
         mvc.perform(get("/api/ui/pages/order_list/cards").param("customerId", "1001"))
                 .andExpect(status().isOk())

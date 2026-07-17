@@ -14,7 +14,9 @@ public interface UiActionHandler {
         return true;
     }
 
-    ActionPreparation prepare(ActionContext context);
+    default ActionPreparation prepare(ActionContext context) {
+        throw new UnsupportedOperationException("action does not require preparation");
+    }
 
     ActionResult execute(ActionContext context, ActionCommand command);
 }

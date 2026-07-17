@@ -21,6 +21,10 @@ public final class ActionTarget {
         return new ActionTarget(null, formCode, actionCode, presentation);
     }
 
+    public static ActionTarget action(String actionCode) {
+        return new ActionTarget(null, null, actionCode, null);
+    }
+
     public String getRouteCode() {
         return routeCode;
     }

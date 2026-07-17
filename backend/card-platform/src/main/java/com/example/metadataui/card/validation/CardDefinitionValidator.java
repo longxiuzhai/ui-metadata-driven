@@ -16,7 +16,7 @@ public class CardDefinitionValidator {
     private static final Set<String> COMPONENTS = Set.of(
             "KeyValueCard", "TagGroupCard", "TimelineCard", "DataTableCard");
     private static final Set<String> LOAD_STRATEGIES = Set.of("eager", "on-visible");
-    private static final Set<String> ACTION_TYPES = Set.of("refresh", "navigate", "open-form");
+    private static final Set<String> ACTION_TYPES = Set.of("refresh", "navigate", "open-form", "execute");
     private static final Set<String> BINDING_SOURCES = Set.of(
             "page-context", "card-data", "account", "literal");
     private static final Set<String> PRESENTATIONS = Set.of("modal", "drawer");
@@ -52,6 +52,10 @@ public class CardDefinitionValidator {
                     "open-form action actionCode is required");
             require(target != null && PRESENTATIONS.contains(target.getPresentation()),
                     "open-form presentation must be modal or drawer");
+        }
+        if ("execute".equals(action.getType())) {
+            require(action.getTarget() != null && StringUtils.hasText(action.getTarget().getActionCode()),
+                    "execute action actionCode is required");
         }
         action.getParams().forEach((name, binding) -> validateBinding(name, binding));
     }

@@ -139,6 +139,8 @@ curl 'http://localhost:8080/api/ui/pages/order_list/cards?customerId=1001' \
 
 不传 `customerId` 时展示当前租户全部订单，传入时只展示指定客户订单。订单行的动作参数从该行 `card-data.customerId` 解析并跳转客户详情。订单列表除订单号、客户 ID、会员 ID、金额、状态和下单时间外，还返回关联会员的 UnionID、手机号、等级、状态，以及订单创建和更新时间。
 
+列表卡片可通过 `rowActionCodes` 把动作放入每行“操作”列，通过 `rowActionConfirmations` 配置确认文案。删除使用 `execute` 动作直接调用统一 Action API：客户删除编码为 `customer.delete`，订单删除编码为 `order.delete`；成功响应中的 `refreshCards` 用于局部刷新当前表格。
+
 客户基本信息示例：
 
 ```json

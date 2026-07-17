@@ -3,7 +3,7 @@ export type LoadStrategy = 'eager' | 'on-visible'
 export interface CardAction {
   code: string
   label: string
-  type: 'refresh' | 'navigate' | 'open-form'
+  type: 'refresh' | 'navigate' | 'open-form' | 'execute'
   target?: ActionTarget | string
   params?: Record<string, ParameterBinding>
   success?: ActionSuccess

@@ -16,6 +16,8 @@ const props = defineProps<{
   columns?: Column[]
   rowKey?: string
   rowActionCode?: string
+  rowActionCodes?: string[]
+  rowActionConfirmations?: Record<string, string>
   summaryLabel?: string
   minTableWidth?: number
   actions?: CardAction[]
@@ -25,6 +27,11 @@ const emit = defineEmits<{ action: [action: CardAction, row: Record<string, unkn
 const rowAction = computed(() =>
   props.actions?.find(action => action.code === props.rowActionCode)
 )
+const rowActions = computed(() =>
+  (props.rowActionCodes ?? [])
+    .map(code => props.actions?.find(action => action.code === code))
+    .filter((action): action is CardAction => action !== undefined)
+)
 
 function show(row: Record<string, unknown>, column: Column) {
   const formatter = column.formatter ? formatters[column.formatter] : undefined
@@ -33,6 +40,12 @@ function show(row: Record<string, unknown>, column: Column) {
 
 function activateRow(row: Record<string, unknown>) {
   if (rowAction.value) emit('action', rowAction.value, row)
+}
+
+function activateAction(action: CardAction, row: Record<string, unknown>) {
+  const confirmation = props.rowActionConfirmations?.[action.code]
+  if (confirmation && !window.confirm(confirmation)) return
+  emit('action', action, row)
 }
 </script>
 
@@ -47,6 +60,7 @@ function activateRow(row: Record<string, unknown>) {
                 :style="{ width: column.width ? `${column.width}px` : undefined, textAlign: column.align ?? 'left' }">
               {{ column.label }}
             </th>
+            <th v-if="rowActions.length" class="operation-column">操作</th>
           </tr>
         </thead>
         <tbody>
@@ -58,6 +72,12 @@ function activateRow(row: Record<string, unknown>) {
             <td v-for="column in columns" :key="column.key"
                 :style="{ textAlign: column.align ?? 'left' }">
               {{ show(row, column) }}
+            </td>
+            <td v-if="rowActions.length" class="operation-column">
+              <button v-for="action in rowActions" :key="action.code" type="button"
+                      class="row-action danger" @click.stop="activateAction(action, row)">
+                {{ action.label }}
+              </button>
             </td>
           </tr>
         </tbody>
@@ -78,4 +98,8 @@ tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: #f8fbff; }
 tbody tr.clickable { cursor: pointer; }
 tbody tr.clickable:focus { outline: 2px solid #4f7cff; outline-offset: -2px; background: #f3f7ff; }
+.operation-column { width: 90px; text-align: center; }
+.row-action { padding: 5px 10px; border: 0; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.row-action.danger { background: #fff1f0; color: #cf1322; }
+.row-action.danger:hover { background: #ffccc7; }
 </style>

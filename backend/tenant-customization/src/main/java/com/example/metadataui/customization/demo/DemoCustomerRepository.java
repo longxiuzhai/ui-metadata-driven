@@ -82,6 +82,18 @@ public class DemoCustomerRepository {
         return get(customerId);
     }
 
+    @Transactional
+    public void deleteCustomer(String customerId) {
+        BizCustomer customer = get(customerId).customer;
+        long orderCount = orderMapper.selectCount(new LambdaQueryWrapper<BizOrder>()
+                .eq(BizOrder::getTenantId, tenantProvider.currentTenantId())
+                .eq(BizOrder::getCustomerId, customerId));
+        if (orderCount > 0) {
+            throw new ActionConflictException("客户存在关联订单，请先删除订单");
+        }
+        customerMapper.deleteById(customer.getId());
+    }
+
     public List<Map<String, String>> tags(String customerId) {
         Long customerPkId = get(customerId).customer.getId();
         return friendTagMapper.selectList(new LambdaQueryWrapper<BizCustomerFriendTag>()
@@ -130,6 +142,15 @@ public class DemoCustomerRepository {
                 .eq(BizOrder::getTenantId, tenantProvider.currentTenantId()).eq(BizOrder::getOrderNo, orderNo));
         if (order == null) throw new BusinessDataNotFoundException("订单不存在: " + orderNo);
         return orderValues(order);
+    }
+
+    @Transactional
+    public void deleteOrder(String orderNo) {
+        BizOrder order = orderMapper.selectOne(new LambdaQueryWrapper<BizOrder>()
+                .eq(BizOrder::getTenantId, tenantProvider.currentTenantId())
+                .eq(BizOrder::getOrderNo, orderNo));
+        if (order == null) throw new BusinessDataNotFoundException("订单不存在: " + orderNo);
+        orderMapper.deleteById(order.getId());
     }
 
     public Map<String, Object> member(String memberId) {

@@ -16,7 +16,7 @@ import java.util.Set;
 public class AccountService {
     private static final Set<String> LEGACY_PERMISSIONS = Set.of(
             "home:read", "home:activity:read", "customer:read", "customer:update",
-            "customer:tag:read", "customer:trace:read", "order:read");
+            "customer:tag:read", "customer:trace:read", "order:read", "order:update");
     private static final Set<String> DEFAULT_FEATURES = Set.of(
             "homeActivity", "customerTags", "customerBehaviorTrace");
 

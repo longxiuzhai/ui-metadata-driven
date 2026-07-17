@@ -1,4 +1,5 @@
 import type { Router } from 'vue-router'
+import { executeAction } from '../api'
 import type { CardAction, OpenFormRequest } from '../types'
 import { resolveParameters } from './ParameterResolver'
 import { routeRegistry } from './routeRegistry'
@@ -52,6 +53,21 @@ export function createActionRuntime(router: Router, callbacks: ActionRuntimeCall
           cardCode: context.cardCode,
           params
         })
+        return
+      }
+
+      if (action.type === 'execute') {
+        if (!target?.actionCode) throw new Error('直接动作配置不完整')
+        const result = await executeAction(target.actionCode, {
+          pageCode: context.pageCode,
+          cardCode: context.cardCode,
+          params,
+          values: {},
+          version: 0,
+          requestId: crypto.randomUUID()
+        })
+        callbacks.refreshCards(result.refreshCards)
+        callbacks.notify(result.message)
       }
     } catch (reason) {
       callbacks.notify((reason as Error).message)
