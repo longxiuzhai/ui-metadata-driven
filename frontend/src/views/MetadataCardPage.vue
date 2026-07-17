@@ -9,6 +9,7 @@ import type { ActionResult, CardAction, CardPageDefinition, OpenFormRequest } fr
 const props = defineProps<{
   pageCode: string
   context: Record<string, string>
+  requestParams?: Record<string, string>
   loadDefinition: () => Promise<CardPageDefinition>
   reloadToken: number
 }>()
@@ -92,6 +93,7 @@ watch(
 
 <template>
   <main class="business-main">
+    <slot name="before-cards" />
     <div v-if="loading" class="page-state">正在装配页面卡片…</div>
     <div v-else-if="error" class="page-state error">
       {{ error }}
@@ -104,6 +106,7 @@ watch(
         :key="card.code"
         :definition="card"
         :context="context"
+        :request-params="requestParams"
         :refresh-token="refreshTokens[card.code] ?? 0"
         :style="{ '--xs': card.span.xs, '--md': card.span.md, '--xl': card.span.xl }"
         @action="(action, data) => handleCardAction(action, data, card.code)"

@@ -50,7 +50,12 @@ export async function getHomeCards(): Promise<CardPageDefinition> {
   return getCardPage('/api/ui/pages/home/cards', 'home')
 }
 
-export async function loadCardData(urlTemplate: string, context: Record<string, string>, signal: AbortSignal) {
+export async function loadCardData(
+  urlTemplate: string,
+  context: Record<string, string>,
+  signal: AbortSignal,
+  requestParams: Record<string, string> = {}
+) {
   // dataApi 由后端元数据提供，例如 /api/customers/{customerId}/summary。
   // 页面上下文只负责替换占位符；卡片组件不会感知路由或业务查询参数。
   const url = Object.entries(context).reduce(
@@ -64,7 +69,12 @@ export async function loadCardData(urlTemplate: string, context: Record<string, 
     // 元数据不能把浏览器引向任意外部地址，数据请求统一限制在本站 API 下。
     throw new Error('拒绝访问非站内数据源')
   }
-  return apiRequest(url, { signal })
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(requestParams)) {
+    if (value.trim()) search.set(key, value.trim())
+  }
+  const requestUrl = search.size > 0 ? `${url}${url.includes('?') ? '&' : '?'}${search}` : url
+  return apiRequest(requestUrl, { signal })
 }
 
 async function postAction<T>(url: string, body: unknown): Promise<T> {

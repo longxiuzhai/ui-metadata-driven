@@ -1,8 +1,9 @@
 package com.example.metadataui.customization.demo;
 
+import com.example.metadataui.customization.demo.query.CustomerListQuery;
+import com.example.metadataui.customization.demo.query.OrderListQuery;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -17,8 +18,8 @@ public class DemoCardDataController {
     }
 
     @GetMapping("/api/customers")
-    public List<Map<String, Object>> customers() {
-        return customerRepository.customers();
+    public List<Map<String, Object>> customers(CustomerListQuery query) {
+        return customerRepository.customers(query);
     }
 
     @GetMapping("/api/customers/{id}/basic")
@@ -37,14 +38,14 @@ public class DemoCardDataController {
     }
 
     @GetMapping("/api/customers/{id}/orders")
-    public List<Map<String, Object>> orders(@PathVariable String id) {
-        return customerRepository.orders(id);
+    public List<Map<String, Object>> orders(@PathVariable String id, OrderListQuery query) {
+        query.setCustomerId(id);
+        return customerRepository.orders(query);
     }
 
     @GetMapping("/api/orders")
-    public List<Map<String, Object>> orderList(@RequestParam(required = false) String customerId,
-                                               @RequestParam(required = false) String status) {
-        return customerRepository.orders(customerId, status);
+    public List<Map<String, Object>> orderList(OrderListQuery query) {
+        return customerRepository.orders(query);
     }
 
     @GetMapping("/api/orders/{orderNo}")

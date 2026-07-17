@@ -8,6 +8,7 @@ import UnknownCard from './cards/UnknownCard.vue'
 const props = defineProps<{
   definition: CardDefinition
   context: Record<string, string>
+  requestParams?: Record<string, string>
   refreshToken?: number
 }>()
 const emit = defineEmits<{ action: [action: CardAction, cardData: unknown] }>()
@@ -46,32 +47,37 @@ const headerActions = computed(() =>
 const isEmpty = computed(
   () => data.value == null || (Array.isArray(data.value) && data.value.length === 0)
 )
+const requestParamsKey = computed(() => JSON.stringify(props.requestParams ?? {}))
 
 async function load() {
   // 同一卡片只允许一个有效请求。刷新或卸载时取消旧请求，避免旧响应覆盖新数据。
-  if (loading.value) {
-    return
-  }
-
   controller?.abort()
-  controller = new AbortController()
+  const currentController = new AbortController()
+  controller = currentController
   loading.value = true
   error.value = ''
   const started = performance.now()
 
   try {
-    data.value = await loadCardData(props.definition.dataApi, props.context, controller.signal)
+    data.value = await loadCardData(
+      props.definition.dataApi,
+      props.context,
+      currentController.signal,
+      props.requestParams
+    )
   } catch (reason) {
     if ((reason as Error).name !== 'AbortError') {
       error.value = (reason as Error).message
     }
   } finally {
-    loading.value = false
-    console.info('card_load', {
-      card: props.definition.code,
-      durationMs: Math.round(performance.now() - started),
-      ok: !error.value
-    })
+    if (controller === currentController) {
+      loading.value = false
+      console.info('card_load', {
+        card: props.definition.code,
+        durationMs: Math.round(performance.now() - started),
+        ok: !error.value
+      })
+    }
   }
 }
 
@@ -101,9 +107,9 @@ onBeforeUnmount(() => {
 })
 
 watch(
-  () => props.refreshToken,
+  () => [props.refreshToken, requestParamsKey.value],
   (next, previous) => {
-    // 父页面递增 token 即可触发指定卡片刷新，无需让动作运行时持有组件实例。
+    // 动作刷新信号或业务页面请求参数变化时，都按最新条件重新加载。
     if (previous !== undefined && next !== previous) load()
   }
 )

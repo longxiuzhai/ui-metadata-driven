@@ -141,6 +141,8 @@ curl 'http://localhost:8080/api/ui/pages/order_list/cards?customerId=1001' \
 
 列表卡片通过 `tableActionCodes` 把“新增”等动作放入表格工具栏，通过 `rowActionCodes` 把“查看 / 修改 / 删除”放入每行操作列，并可用 `rowActionConfirmations` 配置确认文案。操作列默认冻结在右侧，设置 `operationFixed: false` 可关闭；业务列使用 `columns[].fixed: "left" | "right"` 配置冻结方向，冻结列应提供明确的 `width`。删除使用 `execute` 动作直接调用统一 Action API；成功响应中的 `refreshCards` 用于局部刷新当前表格。
 
+列表查询参数由具体业务页面提交，而不是由表格元数据定义。`GET /api/customers` 支持 `customerId/name/mobile/status`，其中 `name` 为模糊匹配，其余为精确匹配；`GET /api/orders` 支持 `orderNo/customerId/memberId/status`；`GET /api/customers/{customerId}/orders` 支持 `orderNo/memberId/status`。非空参数可以组合使用。
+
 客户基本信息示例：
 
 ```json

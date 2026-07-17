@@ -14,6 +14,8 @@ import com.example.metadataui.customization.demo.mapper.BizCustomerFriendTagMapp
 import com.example.metadataui.customization.demo.mapper.BizCustomerMapper;
 import com.example.metadataui.customization.demo.mapper.BizMemberMapper;
 import com.example.metadataui.customization.demo.mapper.BizOrderMapper;
+import com.example.metadataui.customization.demo.query.CustomerListQuery;
+import com.example.metadataui.customization.demo.query.OrderListQuery;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,8 +61,20 @@ public class DemoCustomerRepository {
     }
 
     public List<Map<String, Object>> customers() {
-        return customerMapper.selectList(new LambdaQueryWrapper<BizCustomer>()
-                        .eq(BizCustomer::getTenantId, tenantProvider.currentTenantId())
+        return customers(new CustomerListQuery());
+    }
+
+    public List<Map<String, Object>> customers(CustomerListQuery criteria) {
+        LambdaQueryWrapper<BizCustomer> query = new LambdaQueryWrapper<BizCustomer>()
+                .eq(BizCustomer::getTenantId, tenantProvider.currentTenantId());
+        if (hasText(criteria.getCustomerId())) {
+            query.eq(BizCustomer::getCustomerId, criteria.getCustomerId().trim());
+        }
+        if (hasText(criteria.getName())) query.like(BizCustomer::getName, criteria.getName().trim());
+        if (hasText(criteria.getMobile())) query.eq(BizCustomer::getMobile, criteria.getMobile().trim());
+        String status = normalizedStatus(criteria.getStatus(), List.of("ACTIVE", "INACTIVE"));
+        if (status != null) query.eq(BizCustomer::getStatus, status);
+        return customerMapper.selectList(query
                         .orderByDesc(BizCustomer::getUpdatedAt)
                         .orderByDesc(BizCustomer::getId)).stream()
                 .map(this::customerValues)
@@ -139,19 +153,32 @@ public class DemoCustomerRepository {
     }
 
     public List<Map<String, Object>> orders(String customerId) {
-        return orders(customerId, null);
+        OrderListQuery query = new OrderListQuery();
+        query.setCustomerId(customerId);
+        return orders(query);
     }
 
     public List<Map<String, Object>> orders(String customerId, String status) {
+        OrderListQuery query = new OrderListQuery();
+        query.setCustomerId(customerId);
+        query.setStatus(status);
+        return orders(query);
+    }
+
+    public List<Map<String, Object>> orders(OrderListQuery criteria) {
         LambdaQueryWrapper<BizOrder> query = new LambdaQueryWrapper<BizOrder>()
                         .eq(BizOrder::getTenantId, tenantProvider.currentTenantId())
                         .orderByDesc(BizOrder::getPlacedAt)
                         .orderByDesc(BizOrder::getId);
-        if (customerId != null && !customerId.isBlank()) {
+        if (hasText(criteria.getCustomerId())) {
+            String customerId = criteria.getCustomerId().trim();
             get(customerId);
             query.eq(BizOrder::getCustomerId, customerId);
         }
-        if (status != null && !status.isBlank()) query.eq(BizOrder::getOrderStatus, status.trim().toUpperCase());
+        if (hasText(criteria.getOrderNo())) query.eq(BizOrder::getOrderNo, criteria.getOrderNo().trim());
+        if (hasText(criteria.getMemberId())) query.eq(BizOrder::getMemberId, criteria.getMemberId().trim());
+        String status = normalizedStatus(criteria.getStatus(), List.of("OPEN", "PAID", "CLOSED"));
+        if (status != null) query.eq(BizOrder::getOrderStatus, status);
         return orderMapper.selectList(query).stream()
                 .map(this::orderValues).collect(Collectors.toList());
     }
@@ -255,6 +282,19 @@ public class DemoCustomerRepository {
         value.put("createdAt", DATE_TIME.format(customer.getCreatedAt()));
         value.put("updatedAt", DATE_TIME.format(customer.getUpdatedAt()));
         return value;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private String normalizedStatus(String value, List<String> allowed) {
+        if (!hasText(value)) return null;
+        String normalized = value.trim().toUpperCase();
+        if (!allowed.contains(normalized)) {
+            throw new IllegalArgumentException("不支持的状态: " + value);
+        }
+        return normalized;
     }
 
     public static final class CustomerSnapshot {

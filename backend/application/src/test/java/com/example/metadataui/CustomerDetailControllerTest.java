@@ -137,6 +137,38 @@ class CustomerDetailControllerTest {
     }
 
     @Test
+    void queriesCustomerAndOrderListsWithBusinessCriteria() throws Exception {
+        mvc.perform(get("/api/customers").param("customerId", "1001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].customerId").value("1001"));
+
+        mvc.perform(get("/api/customers").param("name", "示例客户"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].name").value("示例客户 1001"));
+
+        mvc.perform(get("/api/customers").param("mobile", "00000000000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+
+        mvc.perform(get("/api/orders").param("orderNo", "O20260715001")
+                        .param("customerId", "1001").param("memberId", "M10001")
+                        .param("status", "PAID"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].orderNo").value("O20260715001"));
+
+        mvc.perform(get("/api/customers/1001/orders").param("status", "OPEN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].orderNo").value("O20260710002"));
+
+        mvc.perform(get("/api/orders").param("status", "UNKNOWN"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void returnsNotFoundForUnknownBusinessData() throws Exception {
         mvc.perform(get("/api/customers/missing/basic"))
                 .andExpect(status().isNotFound());
