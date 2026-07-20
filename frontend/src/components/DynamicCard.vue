@@ -149,7 +149,11 @@ watch(
       v-bind="definition.props"
       :component-name="isUnknown ? definition.component : undefined"
       @action="(action: CardAction, row: unknown) => emit('action', action, row)"
-    />
+    >
+      <template #toolbar-after>
+        <slot name="table-toolbar-after" />
+      </template>
+    </component>
   </article>
 </template>
 

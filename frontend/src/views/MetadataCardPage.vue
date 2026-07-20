@@ -113,6 +113,9 @@ watch(
         <template #before-table-cards>
           <slot name="before-cards" />
         </template>
+        <template #table-toolbar-after>
+          <slot name="table-toolbar-after" :card-code="card.code" />
+        </template>
       </DynamicCard>
       <div v-if="page.cards.length === 0" class="page-state empty">当前没有可用卡片</div>
     </section>

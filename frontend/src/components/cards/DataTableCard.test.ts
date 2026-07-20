@@ -23,10 +23,15 @@ describe('DataTableCard', () => {
         actions,
         tableActionCodes: ['create'],
         rowActionCodes: ['view', 'edit', 'delete']
+      },
+      slots: {
+        'toolbar-after': '<button class="query-from-page">查询</button>'
       }
     })
 
     expect(wrapper.find('.toolbar-action').text()).toBe('新增')
+    expect(wrapper.find('.query-from-page').text()).toBe('查询')
+    expect(wrapper.findAll('.table-actions button').map(button => button.text())).toEqual(['新增', '查询'])
     expect(wrapper.findAll('.row-action').map(button => button.text())).toEqual(['查看', '修改', '删除'])
     expect(wrapper.find('th.fixed-left').attributes('style')).toContain('left: 0px')
     expect(wrapper.find('th.operation-column').classes()).toContain('fixed-right')

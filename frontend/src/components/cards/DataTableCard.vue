@@ -85,6 +85,7 @@ function activateAction(action: CardAction, row: Record<string, unknown>) {
       <div class="table-actions">
         <button v-for="action in tableActions" :key="action.code" type="button"
                 class="toolbar-action" @click="emit('action', action, {})">{{ action.label }}</button>
+        <slot name="toolbar-after" />
       </div>
     </div>
     <div class="table-scroll">
