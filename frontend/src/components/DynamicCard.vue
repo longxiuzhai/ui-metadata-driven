@@ -117,8 +117,7 @@ watch(
 
 <template>
   <article ref="root" class="card">
-    <header>
-      <slot name="before-table-cards" />
+    <header v-if="headerActions.length">
       <div>
         <button
           v-for="action in headerActions"
@@ -150,6 +149,9 @@ watch(
       :component-name="isUnknown ? definition.component : undefined"
       @action="(action: CardAction, row: unknown) => emit('action', action, row)"
     >
+      <template #before-table-cards>
+        <slot name="before-table-cards" />
+      </template>
       <template #toolbar-after>
         <slot name="table-toolbar-after" />
       </template>

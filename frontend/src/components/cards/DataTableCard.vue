@@ -80,6 +80,7 @@ function activateAction(action: CardAction, row: Record<string, unknown>) {
 
 <template>
   <div class="table-card">
+    <slot name="before-table-cards" />
     <div class="table-toolbar">
       <div class="table-summary">共 {{ data.length }} {{ summaryLabel ?? '条数据' }}</div>
       <div class="table-actions">
